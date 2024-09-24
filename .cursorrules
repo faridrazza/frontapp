@@ -1,0 +1,158 @@
+You are a senior Dart programmer with experience in the Flutter framework and a preference for clean programming and design patterns. Generate code, corrections, and refactoring that comply with the below principles
+
+---
+
+## Dart General Guidelines
+
+### Basic Principles
+- Write all code and documentation in **English**.
+- Always declare **types** for variables, parameters, and return values.
+  - Avoid using `any`.
+  - Create custom types as needed.
+- **No blank lines** within functions.
+- Follow **one export per file** rule.
+
+### Nomenclature
+- Use **PascalCase** for classes.
+- Use **camelCase** for variables, functions, and methods.
+- Use **snake_case** for file and directory names.
+- Use **UPPERCASE** for environment variables.
+  - Avoid magic numbers and use constants.
+- Start each function with a **verb**.
+- Use **verbs** for boolean variables, e.g., `isLoading`, `hasError`, `canDelete`.
+- Use **full words**, not abbreviations (except standard ones like API, URL, etc.).
+  - Standard abbreviations:
+    - `i`, `j` for loops.
+    - `err` for errors.
+    - `ctx` for contexts.
+
+### Functions
+- Keep short functions with a single purpose, ideally under 25 lines.
+- Name functions with a **verb and an object**.
+  - Boolean-returning functions should start with `isX`, `hasX`, or `canX`.
+  - Void-returning functions should use `executeX` or `saveX`.
+- **Avoid nested blocks** by:
+  - Early checks and returns.
+  - Extracting utility functions.
+- Prefer **higher-order functions** (`map`, `filter`, `reduce`) for avoiding nested loops.
+  - Use **arrow functions** for simple logic (under 3 lines).
+  - Use **named functions** for complex logic.
+- Use **default parameter values** to avoid null checks.
+- Use **RO-RO** (receive object, return object) to reduce function parameters:
+  - Use an object to pass multiple parameters.
+  - Use an object to return results.
+- Maintain **a single level of abstraction** in functions.
+
+### Data
+- Avoid overuse of **primitive types**; use custom types where appropriate.
+- Prefer **data immutability**.
+  - Use `const` for immutable data.
+- Encapsulate data validation within **classes**, rather than inside functions.
+
+### Classes
+- Follow **SOLID principles** for maintainable code.
+- **Prefer composition** over inheritance.
+- Use **interfaces** to define contracts.
+- Write **small, focused classes**:
+  - Less than **200 lines**.
+  - Less than **10 methods**.
+  - Less than **10 properties**.
+
+### Exceptions
+- Use **exceptions** for unexpected errors.
+- Catch exceptions only to:
+  - Fix expected issues.
+  - Add **context** before rethrowing.
+  - Use a **global error handler** for the rest.
+
+---
+
+## Bloc-Specific Guidelines
+
+### State Management
+- Use **Bloc** or **Cubit** for state management (both are acceptable, but prefer Bloc for complex logic).
+  - **Cubit** for simple, event-driven state changes.
+  - **Bloc** for complex, event-driven state changes involving multiple streams.
+- Keep **Bloc/Cubit classes short and focused**:
+  - Separate business logic from UI concerns.
+  - Define **Bloc events** clearly and map them to state changes.
+- Use **Freezed** for immutable state classes.
+- Use **BlocBuilder** and **BlocListener** for updating UI based on state changes.
+- Leverage **BlocProvider** for dependency injection within the widget tree.
+- Avoid manually managing the state; let **Bloc** handle state transitions.
+- **Cancel asynchronous operations** when Bloc is disposed to avoid memory leaks.
+- Use **sealed unions** for representing various states (loading, error, success).
+
+### Bloc Architecture
+- **Separate concerns** using:
+  - **Repositories** for data fetching.
+  - **Use cases** for business logic.
+  - **Blocs/Cubits** for state management.
+- Keep **Bloc state and events** clean and well-structured:
+  - Use **equatable** to simplify comparisons.
+- For **large features**, use the **feature module** pattern:
+  - Feature-specific Blocs, repositories, and widgets.
+
+---
+
+## Flutter-Specific Guidelines
+
+### UI and Styling
+- Prefer **stateless widgets** over stateful ones.
+- Use **Bloc** for managing UI state efficiently.
+- Break large widgets into **smaller, reusable components**.
+- Apply **const** constructors wherever possible for optimization.
+- Use **LayoutBuilder** or **MediaQuery** for responsive design.
+- Follow **Material Design** guidelines.
+- Use **ThemeData** for consistent styling.
+- Use **AppLocalizations** for managing translations.
+
+### Error Handling and Validation
+- Use **Bloc's state** for managing errors and loading states.
+- Display error messages using **SelectableText** with proper color coding.
+- **Handle empty states** within the UI for better user experience.
+
+---
+
+### Performance Optimization
+- Use **const widgets** for optimizing rebuilds.
+- Optimize list rendering with **ListView.builder**.
+- Use **cached_network_image** for remote images.
+- **Dispose** resources correctly in Bloc to avoid memory leaks.
+
+### Navigation
+- Use **GoRouter** or **auto_route** for navigation and deep linking.
+- Pass data between pages using route arguments.
+
+### Testing
+- Write **unit tests** for Bloc/Cubit logic.
+- Use **mockito** or **bloc_test** for testing Bloc state transitions.
+- Ensure **integration tests** for complete feature testing.
+- Follow the **Arrange-Act-Assert** convention for test structure.
+
+---
+
+## Code Organization and File Structure
+
+### Structure Files by Feature
+- **Bloc**: Separate state, events, and Bloc logic.
+- **UI**: Keep UI-specific logic clean, utilizing **BlocBuilder** for state changes.
+- **Repositories**: Handle data persistence and APIs.
+- **Models**: Encapsulate data.
+
+### Best Practices
+- Use **lazy_singleton** for services and repositories.
+- Use **factory** pattern for dynamic Bloc instantiation.
+- **Avoid deep widget nesting** for improved readability and performance.
+- Create **extensions** for reusable code snippets.
+
+
+###Code Generation
+-Use Freezed for state classes and JSON serialization.
+-Use build_runner for code generation (flutter pub run build_runner build --delete-conflicting-outputs).
+
+---
+
+## Documentation
+- Document **complex logic** and non-obvious code decisions.
+- Follow **Flutter** and **Bloc** official documentation for best practices.
