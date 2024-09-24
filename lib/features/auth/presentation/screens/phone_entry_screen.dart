@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontapp/core/theme/app_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:frontapp/features/auth/presentation/widgets/ai_orb.dart';
 import 'package:frontapp/features/auth/presentation/widgets/phone_input_field.dart';
 import 'package:frontapp/features/auth/presentation/widgets/wave_background.dart';
@@ -38,6 +38,7 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       body: WaveBackground(
         child: SafeArea(
           child: Padding(
@@ -47,23 +48,43 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
               children: [
                 const SizedBox(height: 48),
                 Text(
-                  'Improve Your English speaking skill with AI',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                  textAlign: TextAlign.center,
+                  'Improve Your\nEnglish speaking\nskills with AI',
+                  style: GoogleFonts.inter(
+                    fontSize: 36,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    height: 1.2,
+                  ),
                 ),
                 const Expanded(child: AiOrb()),
-                PhoneInputField(onInputChanged: _updatePhoneNumber),
-                const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: _isValid ? _submitPhoneNumber : null,
+                  onPressed: _submitPhoneNumber,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
+                    backgroundColor: const Color(0xFFC6F432),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: const Text('Enter Phone Number'),
+                  child: Text(
+                    'Enter Phone Number',
+                    style: GoogleFonts.inter(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                PhoneInputField(onInputChanged: _updatePhoneNumber),
+                const SizedBox(height: 16),
+                Text(
+                  'By using Englishbro, you agree to our Terms & Conditions and Privacy policy',
+                  style: GoogleFonts.inter(
+                    color: Colors.white54,
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
               ],
