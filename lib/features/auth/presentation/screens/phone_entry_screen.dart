@@ -17,6 +17,8 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
   String _countryCode = '';
   bool _isValid = false;
   final ValueNotifier<bool> _isKeyboardVisible = ValueNotifier<bool>(false);
+  final ScrollController _scrollController = ScrollController();
+  bool _showScrollIndicator = false;
 
   @override
   void initState() {
@@ -24,6 +26,20 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
       _isKeyboardVisible.value = keyboardHeight > 0;
+    });
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    setState(() {
+      _showScrollIndicator = _scrollController.offset < _scrollController.position.maxScrollExtent;
     });
   }
 
@@ -80,96 +96,125 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
               }
               return true;
             },
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 48),
-                    ValueListenableBuilder<bool>(
-                      valueListenable: _isKeyboardVisible,
-                      builder: (context, isKeyboardVisible, child) {
-                        return AnimatedOpacity(
-                          opacity: isKeyboardVisible ? 0.0 : 1.0,
-                          duration: const Duration(milliseconds: 200),
-                          child: Column(
-                            children: [
-                              Text(
-                                'Improve Your\nEnglish speaking\nskills with AI',
-                                style: GoogleFonts.inter(
-                                  fontSize: 34,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
-                                  height: 1.2,
-                                ),
+            child: Stack(
+              children: [
+                SingleChildScrollView(
+                  controller: _scrollController,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 48),
+                        ValueListenableBuilder<bool>(
+                          valueListenable: _isKeyboardVisible,
+                          builder: (context, isKeyboardVisible, child) {
+                            return AnimatedOpacity(
+                              opacity: isKeyboardVisible ? 0.0 : 1.0,
+                              duration: const Duration(milliseconds: 200),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    'Improve Your\nEnglish speaking\nskills with AI',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                      height: 1.2,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  const AiOrb(),
+                                ],
                               ),
-                              const SizedBox(height: 24),
-                              const AiOrb(),
-                            ],
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: () {
+                            // This button no longer submits the phone number
+                            // You can add any other functionality here if needed
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _isValid ? Colors.black : const Color(0xFFC6F432),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: () {
-                        // This button no longer submits the phone number
-                        // You can add any other functionality here if needed
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _isValid ? Colors.black : const Color(0xFFC6F432),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: Text(
-                        'Enter Phone Number',
-                        style: GoogleFonts.inter(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    PhoneInputField(
-                      onInputChanged: _updatePhoneNumber,
-                    ),
-                    const SizedBox(height: 16),
-                    if (_isValid)
-                      ElevatedButton(
-                        onPressed: _sendOtp,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFC6F432),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                          child: Text(
+                            'Enter Phone Number',
+                            style: GoogleFonts.inter(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
-                        child: Text(
-                          'Submit',
+                        const SizedBox(height: 16),
+                        PhoneInputField(
+                          onInputChanged: _updatePhoneNumber,
+                        ),
+                        const SizedBox(height: 16),
+                        if (_isValid)
+                          ElevatedButton(
+                            onPressed: _sendOtp,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFC6F432),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            child: Text(
+                              'Submit',
+                              style: GoogleFonts.inter(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'By using Englishbro, you agree to our Terms & Conditions and Privacy policy',
                           style: GoogleFonts.inter(
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                            color: Colors.white54,
+                            fontSize: 12,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 48),
+                      ],
+                    ),
+                  ),
+                ),
+                if (_showScrollIndicator)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 16,
+                    child: Center(
+                      child: AnimatedOpacity(
+                        opacity: _showScrollIndicator ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 300),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Icon(
+                            Icons.keyboard_arrow_down,
+                            color: Colors.white,
+                            size: 30,
                           ),
                         ),
                       ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'By using Englishbro, you agree to our Terms & Conditions and Privacy policy',
-                      style: GoogleFonts.inter(
-                        color: Colors.white54,
-                        fontSize: 12,
-                      ),
-                      textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 48),
-                  ],
-                ),
-              ),
+                  ),
+              ],
             ),
           ),
         ),
