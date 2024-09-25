@@ -34,6 +34,7 @@ class _PhoneInputFieldState extends State<PhoneInputField> {
                 setState(() {
                   isValid = false;
                 });
+                widget.onInputChanged(number.phoneNumber ?? '', isValid);
               },
               onInputValidated: (bool value) {
                 setState(() {
