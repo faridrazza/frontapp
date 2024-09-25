@@ -10,15 +10,15 @@ class WaveBackground extends StatelessWidget {
     return Stack(
       children: [
         Positioned(
-          left: 10,
+          left: 20,
           bottom: MediaQuery.of(context).size.height * 0.4,
           child: Image.asset(
-            'assets/images/waveright.png',
+            'assets/images/waveleft.png',
             height: MediaQuery.of(context).size.height * 0.2,
           ),
         ),
         Positioned(
-          right: 10,
+          right: 5,
           bottom: MediaQuery.of(context).size.height * 0.35,
           child: Image.asset(
             'assets/images/waveleft.png',
