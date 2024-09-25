@@ -1,33 +1,33 @@
-import 'package:flutter/material.dart';
+// import 'package:flutter/material.dart';
 
-class WaveBackground extends StatelessWidget {
-  final Widget child;
+// class WaveBackground extends StatelessWidget {
+//   final Widget child;
 
-  const WaveBackground({Key? key, required this.child}) : super(key: key);
+//   const WaveBackground({Key? key, required this.child}) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned(
-          left: 20,
-          bottom: MediaQuery.of(context).size.height * 0.4,
-          child: Image.asset(
-            'assets/images/waveleft.png',
-            height: MediaQuery.of(context).size.height * 0.2,
-          ),
-        ),
-        Positioned(
-          right: 5,
-          bottom: MediaQuery.of(context).size.height * 0.35,
-          child: Image.asset(
-            'assets/images/waveleft.png',
+//   @override
+//   Widget build(BuildContext context) {
+//     return Stack(
+//       children: [
+//         Positioned(
+//           left: 20,
+//           bottom: MediaQuery.of(context).size.height * 0.4,
+//           child: Image.asset(
+//             'assets/images/waveleft.png',
+//             height: MediaQuery.of(context).size.height * 0.2,
+//           ),
+//         ),
+//         Positioned(
+//           right: 5,
+//           bottom: MediaQuery.of(context).size.height * 0.35,
+//           child: Image.asset(
+//             'assets/images/waveleft.png',
             
-            height: MediaQuery.of(context).size.height * 0.28,
-          ),
-        ),
-        child,
-      ],
-    );
-  }
-}
+//             height: MediaQuery.of(context).size.height * 0.28,
+//           ),
+//         ),
+//         child,
+//       ],
+//     );
+//   }
+// }
