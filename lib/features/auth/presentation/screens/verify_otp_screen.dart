@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
+import 'package:frontapp/core/services/api_service.dart';
+import 'package:frontapp/features/auth/presentation/screens/complete_profile_screen.dart';
+import 'package:frontapp/features/auth/presentation/screens/home_screen.dart';
 
 class VerifyOtpScreen extends StatefulWidget {
   final String phoneNumber;
@@ -19,9 +22,11 @@ class VerifyOtpScreen extends StatefulWidget {
 class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
   final TextEditingController _otpController = TextEditingController();
   final ValueNotifier<bool> _isKeyboardVisible = ValueNotifier<bool>(false);
+  final ApiService _apiService = ApiService();
   String _errorMessage = '';
   int _timerSeconds = 60;
   Timer? _timer;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -52,25 +57,86 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
     });
   }
 
-  void _verifyOtp() {
-    // Implement OTP verification logic here
+  Future<void> _verifyOtp() async {
     setState(() {
-      if (_otpController.text != '1234') { // Replace with actual OTP validation
-        _errorMessage = 'Invalid OTP. Please try again.';
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    // Simulate API call delay
+    await Future.delayed(Duration(seconds: 2));
+
+    // Simulate OTP verification for development
+    if (_otpController.text == '1234') {
+      // Randomly decide if profile is complete (for testing both flows)
+      bool isProfileComplete = DateTime.now().millisecond % 2 == 0;
+
+      if (isProfileComplete) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => HomeScreen(isNewUser: false)),
+        );
       } else {
-        _errorMessage = '';
-        // Navigate to the next screen or perform necessary action
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => CompleteProfileScreen()),
+        );
       }
+    } else {
+      setState(() {
+        _errorMessage = 'Invalid OTP. Please try again. Hint: Use 1234';
+      });
+    }
+
+    // Actual API implementation (commented out for now)
+    /*
+    try {
+      final response = await _apiService.verifyOtp(
+        widget.countryCode,
+        widget.phoneNumber,
+        _otpController.text,
+      );
+
+      if (response['isProfileComplete']) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => HomeScreen(isNewUser: false)),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => CompleteProfileScreen()),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Invalid OTP. Please try again.';
+      });
+    }
+    */
+
+    setState(() {
+      _isLoading = false;
     });
   }
 
-  void _resendOtp() {
-    // Implement OTP resend logic here
+  Future<void> _resendOtp() async {
     setState(() {
-      _timerSeconds = 60;
+      _isLoading = true;
       _errorMessage = '';
     });
-    _startTimer();
+
+    try {
+      await _apiService.resendOtp(widget.countryCode, widget.phoneNumber);
+      setState(() {
+        _timerSeconds = 60;
+      });
+      _startTimer();
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to resend OTP. Please try again.';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -142,7 +208,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                       ),
                     const SizedBox(height: 24),
                     ElevatedButton(
-                      onPressed: _verifyOtp,
+                      onPressed: _isLoading ? null : _verifyOtp,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFC6F432),
                         shape: RoundedRectangleBorder(
@@ -150,14 +216,16 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: Text(
-                        'Verify OTP',
-                        style: GoogleFonts.inter(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
+                      child: _isLoading
+                          ? CircularProgressIndicator(color: Colors.black)
+                          : Text(
+                              'Verify OTP',
+                              style: GoogleFonts.inter(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
                     ),
                     const SizedBox(height: 16),
                     if (_timerSeconds > 0)
@@ -171,7 +239,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                       )
                     else
                       TextButton(
-                        onPressed: _resendOtp,
+                        onPressed: _isLoading ? null : _resendOtp,
                         child: Text(
                           'Resend OTP',
                           style: GoogleFonts.inter(

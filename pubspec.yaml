@@ -41,6 +41,8 @@ dependencies:
   google_fonts: ^4.0.3
   pin_code_fields: ^7.4.0
   http: ^0.13.5
+  dio: ^5.3.2  # Add this line
+  flutter_secure_storage: ^8.0.0  # Add this line
 
 dev_dependencies:
   flutter_test:
@@ -63,9 +65,22 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    # - images/a_dot_burr.jpeg
-    # - images/a_dot_ham.jpeg
-    - assets/images/
+    - assets/images/menu.png
+    - assets/images/profile.png
+    - assets/images/speak.png
+    - assets/images/game.png
+    - assets/images/idea.png
+    - assets/images/translation.png
+    - assets/images/arrow.png
+    - assets/images/home.png
+    - assets/images/reminder.png
+    - assets/images/share.png
+    - assets/images/support.png
+    - assets/images/design.png
+    - assets/images/aiorb.png
+    - assets/images/waveleft.png
+    # - assets/images/waveleft.png
+    # - assets/images/design.png  # Uncomment this when you have the design.png file
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
