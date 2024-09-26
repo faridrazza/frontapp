@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-// Import other necessary widgets and services
+import 'dart:async';
 
 class VerifyOtpScreen extends StatefulWidget {
   final String phoneNumber;
@@ -20,6 +20,8 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
   final TextEditingController _otpController = TextEditingController();
   final ValueNotifier<bool> _isKeyboardVisible = ValueNotifier<bool>(false);
   String _errorMessage = '';
+  int _timerSeconds = 60;
+  Timer? _timer;
 
   @override
   void initState() {
@@ -28,17 +30,30 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
       final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
       _isKeyboardVisible.value = keyboardHeight > 0;
     });
+    _startTimer();
   }
 
   @override
   void dispose() {
     _otpController.dispose();
+    _timer?.cancel();
     super.dispose();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        if (_timerSeconds > 0) {
+          _timerSeconds--;
+        } else {
+          _timer?.cancel();
+        }
+      });
+    });
   }
 
   void _verifyOtp() {
     // Implement OTP verification logic here
-    // For now, let's just set an error message if the OTP is invalid
     setState(() {
       if (_otpController.text != '1234') { // Replace with actual OTP validation
         _errorMessage = 'Invalid OTP. Please try again.';
@@ -47,6 +62,15 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
         // Navigate to the next screen or perform necessary action
       }
     });
+  }
+
+  void _resendOtp() {
+    // Implement OTP resend logic here
+    setState(() {
+      _timerSeconds = 60;
+      _errorMessage = '';
+    });
+    _startTimer();
   }
 
   @override
@@ -89,6 +113,14 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                         );
                       },
                     ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'We have sent you a 4-digit OTP.',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        color: Colors.white70,
+                      ),
+                    ),
                     const SizedBox(height: 24),
                     TextField(
                       controller: _otpController,
@@ -127,6 +159,28 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    if (_timerSeconds > 0)
+                      Text(
+                        'Resend OTP in ${_timerSeconds}s',
+                        style: GoogleFonts.inter(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                        textAlign: TextAlign.center,
+                      )
+                    else
+                      TextButton(
+                        onPressed: _resendOtp,
+                        child: Text(
+                          'Resend OTP',
+                          style: GoogleFonts.inter(
+                            color: const Color(0xFFC6F432),
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
