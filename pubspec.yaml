@@ -43,6 +43,10 @@ dependencies:
   http: ^0.13.5
   dio: ^5.3.2  # Add this line
   flutter_secure_storage: ^8.0.0  # Add this line
+  web_socket_channel: ^3.0.1
+  flutter_sound: ^9.2.13
+  permission_handler: ^10.0.0
+  speech_to_text: ^6.1.1
 
 dev_dependencies:
   flutter_test:

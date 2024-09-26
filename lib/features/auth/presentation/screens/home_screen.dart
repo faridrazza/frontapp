@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontapp/core/services/api_service.dart';
+import 'package:frontapp/features/speak_with_ai/presentation/screens/speak_with_ai_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:frontapp/features/speak_with_ai/presentation/bloc/speak_with_ai_bloc.dart';
+import 'package:frontapp/features/speak_with_ai/domain/repositories/speak_with_ai_repository.dart';
+import 'package:frontapp/core/services/websocket_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -152,42 +157,63 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildFeatureButton(String label, Color color, IconData icon) {
-    return Container(
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Stack(
-        children: [
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.1),
-                    shape: BoxShape.circle,
+    return GestureDetector(
+      onTap: () {
+        if (label == 'Speak with AI') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BlocProvider(
+                create: (context) => SpeakWithAIBloc(
+                  SpeakWithAIRepository(
+                    ApiService(),
+                    WebSocketService(),
                   ),
-                  child: Icon(icon, size: 24, color: Colors.black),
                 ),
-                SizedBox(height: 8),
-                Text(
-                  label,
-                  style: GoogleFonts.inter(
-                    textStyle: TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.w600),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+                child: SpeakWithAIScreen(),
+              ),
             ),
-          ),
-          Positioned(
-            top: 8,
-            right: 8,
-            child: Icon(Icons.arrow_forward, size: 20, color: Colors.black),
-          ),
-        ],
+          );
+        }
+        // Add other feature navigations here when implemented
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Stack(
+          children: [
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(icon, size: 24, color: Colors.black),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    label,
+                    style: GoogleFonts.inter(
+                      textStyle: TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.w600),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Icon(Icons.arrow_forward, size: 20, color: Colors.black),
+            ),
+          ],
+        ),
       ),
     );
   }

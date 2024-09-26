@@ -109,4 +109,30 @@ class ApiService {
       throw Exception('Error fetching profile: $e');
     }
   }
+
+ 
+
+  Future<Map<String, dynamic>> startRoleplay(String scenario) async {
+    try {
+      final token = await _storage.read(key: 'auth_token');
+      final response = await _dio.post(
+        '$_baseUrl/api/ai-speak/start-roleplay',
+        data: {'scenario': scenario},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        return {
+          'conversationId': response.data['conversationId'],
+          'initialPrompt': response.data['initialPrompt'],
+          'audioBuffer': response.data['audioBuffer'],
+          'wsUrl': response.data['wsUrl'],
+        };
+      } else {
+        throw Exception('Failed to start roleplay');
+      }
+    } catch (e) {
+      throw Exception('Error starting roleplay: $e');
+    }
+  }
 }
