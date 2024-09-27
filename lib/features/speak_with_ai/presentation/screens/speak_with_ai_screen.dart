@@ -9,7 +9,33 @@ import '../widgets/role_play_options.dart';
 import '../widgets/voice_input_button.dart';
 import '../../domain/models/message.dart';
 
-class SpeakWithAIScreen extends StatelessWidget {
+class SpeakWithAIScreen extends StatefulWidget {
+  @override
+  _SpeakWithAIScreenState createState() => _SpeakWithAIScreenState();
+}
+
+class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(seconds: 10), // Increased duration for slower rotation
+    )..repeat(); // This will make it rotate continuously in one direction
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,11 +71,19 @@ class SpeakWithAIScreen extends StatelessWidget {
 
   Widget _buildHeader() {
     return Padding(
-      // padding: const EdgeInsets.all(16.0),
       padding: const EdgeInsets.symmetric(horizontal: 35.0, vertical: 8.0),
       child: Row(
         children: [
-          Image.asset('assets/images/AI.png', width: 60, height: 60),
+          AnimatedBuilder(
+            animation: _animationController,
+            builder: (context, child) {
+              return Transform.rotate(
+                angle: _animationController.value * 2 * 3.14159, // Full rotation
+                child: child,
+              );
+            },
+            child: Image.asset('assets/images/AI.png', width: 60, height: 60),
+          ),
           SizedBox(width: 80),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
