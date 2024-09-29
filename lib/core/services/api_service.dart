@@ -25,9 +25,12 @@ class ApiService {
     _logger.d('Phone number: $phoneNumber');
     _logger.d('Base URL: $_baseUrl');
 
-    // Ensure country code starts with '+'
+    // Ensure country code starts with '+' and is not longer than 4 characters
     if (!countryCode.startsWith('+')) {
       countryCode = '+$countryCode';
+    }
+    if (countryCode.length > 4) {
+      countryCode = countryCode.substring(0, 4);
     }
 
     // Remove any non-digit characters from the phone number
