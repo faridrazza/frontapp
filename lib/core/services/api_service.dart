@@ -8,7 +8,7 @@ class ApiService {
   final FlutterSecureStorage _storage = FlutterSecureStorage();
 
   // Use this for local development
-  static const String _baseUrlDev = 'http://localhost:5000';
+  static const String _baseUrlDev = 'http://192.168.0.104:5000'; // Replace with your computer's IP
   // Use this for production (replace with your actual production URL when ready)
   static const String _baseUrlProd = 'https://your-deployed-backend.com';
 
@@ -115,12 +115,14 @@ class ApiService {
   Future<Map<String, dynamic>> startRoleplay(String scenario) async {
     try {
       final token = await _storage.read(key: 'auth_token');
+      print('Starting roleplay with scenario: $scenario');
+      print('Using base URL: $_baseUrl');
       final response = await _dio.post(
         '$_baseUrl/api/ai-speak/start-roleplay',
         data: {'scenario': scenario},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-
+      print('Response received: ${response.statusCode}');
       if (response.statusCode == 200) {
         return {
           'conversationId': response.data['conversationId'],
@@ -132,6 +134,7 @@ class ApiService {
         throw Exception('Failed to start roleplay');
       }
     } catch (e) {
+      print('Error details: $e');
       throw Exception('Error starting roleplay: $e');
     }
   }

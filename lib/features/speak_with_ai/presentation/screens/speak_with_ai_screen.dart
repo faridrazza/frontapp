@@ -8,6 +8,8 @@ import '../widgets/user_message_bubble.dart';
 import '../widgets/role_play_options.dart';
 import '../widgets/voice_input_button.dart';
 import '../../domain/models/message.dart';
+import '../../../../core/utils/audio_utils.dart';
+import '../widgets/scrollable_chat_view.dart';
 
 class SpeakWithAIScreen extends StatefulWidget {
   @override
@@ -154,14 +156,9 @@ class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTicker
   }
 
   Widget _buildConversationState(BuildContext context, SpeakWithAIConversation state) {
-    return ListView.builder(
-      itemCount: state.messages.length,
-      itemBuilder: (context, index) {
-        final message = state.messages[index];
-        return message.type == MessageType.ai
-            ? AiMessageBubble(message: message)
-            : UserMessageBubble(message: message);
-      },
+    return ScrollableChatView(
+      messages: state.messages,
+      isLoading: state.isLoading,
     );
   }
 

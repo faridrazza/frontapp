@@ -22,9 +22,14 @@ class AudioUtils {
   }
 
   static Future<void> playAudio(String audioBase64) async {
-    _player = FlutterSoundPlayer();
-    await _player!.openPlayer();
-    final audioData = base64Decode(audioBase64);
-    await _player!.startPlayer(fromDataBuffer: audioData);
+    try {
+      _player = FlutterSoundPlayer();
+      await _player!.openPlayer();
+      final audioData = base64Decode(audioBase64);
+      await _player!.startPlayer(fromDataBuffer: audioData);
+    } catch (e) {
+      print("Error playing audio: $e");
+      // You might want to show a snackbar or toast here to inform the user
+    }
   }
 }

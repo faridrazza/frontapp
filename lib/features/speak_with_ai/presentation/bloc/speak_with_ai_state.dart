@@ -15,24 +15,28 @@ class SpeakWithAILoading extends SpeakWithAIState {}
 class SpeakWithAIConversation extends SpeakWithAIState {
   final String conversationId;
   final List<Message> messages;
+  final bool isLoading;
 
   const SpeakWithAIConversation({
     required this.conversationId,
     required this.messages,
+    this.isLoading = false,
   });
 
   SpeakWithAIConversation copyWith({
     String? conversationId,
     List<Message>? messages,
+    bool? isLoading,
   }) {
     return SpeakWithAIConversation(
       conversationId: conversationId ?? this.conversationId,
       messages: messages ?? this.messages,
+      isLoading: isLoading ?? this.isLoading,
     );
   }
 
   @override
-  List<Object> get props => [conversationId, messages];
+  List<Object> get props => [conversationId, messages, isLoading];
 }
 
 class SpeakWithAIEnded extends SpeakWithAIState {
