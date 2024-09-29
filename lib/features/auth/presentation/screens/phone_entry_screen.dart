@@ -30,39 +30,21 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
     });
   }
 
-  void _updatePhoneNumber(String number, bool isValid) {
+  void _updatePhoneNumber(String countryCode, String phoneNumber, bool isValid) {
     setState(() {
-      _phoneNumber = number;
+      _countryCode = countryCode;
+      _phoneNumber = phoneNumber.replaceAll(RegExp(r'\D'), '');
       _isValid = isValid;
     });
-    _logger.d('Phone number updated: $number, Is valid: $isValid');
-    
-    // Extract country code and phone number correctly
-    final RegExp regExp = RegExp(r'^\+(\d+)\s*(.*)$');
-    final Match? match = regExp.firstMatch(number);
-    
-    if (match != null && match.groupCount == 2) {
-      _countryCode = '+${match.group(1)}';
-      _phoneNumber = match.group(2)!.replaceAll(RegExp(r'\D'), '');
-      
-      // Ensure the country code is not longer than 4 digits (including the '+')
-      if (_countryCode.length > 4) {
-        _phoneNumber = _countryCode.substring(4) + _phoneNumber;
-        _countryCode = _countryCode.substring(0, 4);
-      }
-    } else {
-      _countryCode = '';
-      _phoneNumber = number.replaceAll(RegExp(r'\D'), '');
-    }
-    
-    _logger.d('Extracted country code: $_countryCode');
-    _logger.d('Extracted phone number: $_phoneNumber');
+    _logger.d('Country code: $_countryCode');
+    _logger.d('Phone number: $_phoneNumber');
+    _logger.d('Is valid: $_isValid');
   }
 
   Future<void> _sendOtp() async {
     _logger.i('Attempting to send OTP');
-    _logger.d('Phone number: $_phoneNumber');
     _logger.d('Country code: $_countryCode');
+    _logger.d('Phone number: $_phoneNumber');
     _logger.d('Is valid: $_isValid');
 
     if (!_isValid) {

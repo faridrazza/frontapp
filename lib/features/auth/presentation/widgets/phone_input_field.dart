@@ -3,7 +3,7 @@ import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:logger/logger.dart';
 
 class PhoneInputField extends StatefulWidget {
-  final Function(String, bool) onInputChanged;
+  final Function(String, String, bool) onInputChanged;
 
   const PhoneInputField({Key? key, required this.onInputChanged}) : super(key: key);
 
@@ -39,7 +39,7 @@ class _PhoneInputFieldState extends State<PhoneInputField> {
                 _logger.d('Phone number changed');
                 _logger.d('Country code: ${number.dialCode}');
                 _logger.d('Phone number: ${number.phoneNumber}');
-                widget.onInputChanged(number.phoneNumber ?? '', isValid);
+                widget.onInputChanged(number.dialCode ?? '', number.phoneNumber ?? '', isValid);
               },
               onInputValidated: (bool value) {
                 setState(() {
@@ -47,7 +47,7 @@ class _PhoneInputFieldState extends State<PhoneInputField> {
                 });
                 _logger.d('Phone number validated');
                 _logger.d('Is valid: $value');
-                widget.onInputChanged(number.phoneNumber ?? '', value);
+                widget.onInputChanged(number.dialCode ?? '', number.phoneNumber ?? '', value);
               },
               selectorConfig: const SelectorConfig(
                 selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
