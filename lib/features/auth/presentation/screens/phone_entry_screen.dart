@@ -4,6 +4,7 @@ import 'package:frontapp/features/auth/presentation/widgets/ai_orb.dart';
 import 'package:frontapp/features/auth/presentation/widgets/phone_input_field.dart';
 import 'package:frontapp/features/auth/presentation/screens/verify_otp_screen.dart';
 import 'package:frontapp/core/services/api_service.dart';
+import 'package:logger/logger.dart';
 
 class PhoneEntryScreen extends StatefulWidget {
   const PhoneEntryScreen({Key? key}) : super(key: key);
@@ -18,6 +19,7 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
   String _countryCode = '';
   bool _isValid = false;
   final ValueNotifier<bool> _isKeyboardVisible = ValueNotifier<bool>(false);
+  final Logger _logger = Logger();
 
   @override
   void initState() {
@@ -32,25 +34,61 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
     setState(() {
       _phoneNumber = number;
       _isValid = isValid;
-      _countryCode = number.startsWith('+') ? number.split(' ')[0] : '';
     });
+    _logger.d('Phone number updated: $number, Is valid: $isValid');
+    
+    // Extract country code and phone number correctly
+    final RegExp regExp = RegExp(r'^\+(\d+)\s*(\d+)$');
+    final Match? match = regExp.firstMatch(number);
+    
+    if (match != null && match.groupCount == 2) {
+      _countryCode = '+${match.group(1)}';
+      _phoneNumber = match.group(2)!;
+    } else {
+      _countryCode = '';
+      _phoneNumber = number.replaceAll(RegExp(r'\D'), '');
+    }
+    
+    _logger.d('Extracted country code: $_countryCode');
+    _logger.d('Extracted phone number: $_phoneNumber');
   }
 
   Future<void> _sendOtp() async {
-    try {
-      final response = await _apiService.sendOtp(_countryCode, _phoneNumber);
-      if (response['message'] != null) {
-        _navigateToVerifyOtp();
-      }
-    } catch (e) {
+    _logger.i('Attempting to send OTP');
+    _logger.d('Phone number: $_phoneNumber');
+    _logger.d('Country code: $_countryCode');
+    _logger.d('Is valid: $_isValid');
+
+    if (!_isValid) {
+      _logger.w('Phone number is not valid. Aborting OTP send.');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error sending OTP: $e')),
+        SnackBar(content: Text('Please enter a valid phone number')),
       );
+      return;
     }
 
-    // Mock API call for testing (commented out)
-    // await Future.delayed(Duration(seconds: 2)); // Simulate API delay
-    // _navigateToVerifyOtp();
+    try {
+      _logger.d('Calling API service to send OTP');
+      final response = await _apiService.sendOtp(_countryCode, _phoneNumber);
+      _logger.i('OTP sent successfully');
+      _logger.d('API response: $response');
+
+      if (response['message'] != null) {
+        _logger.d('Navigating to VerifyOtpScreen');
+        _navigateToVerifyOtp();
+      } else {
+        _logger.w('Unexpected API response format');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unexpected error occurred')),
+        );
+      }
+    } catch (e) {
+      _logger.e('Error sending OTP', error: e);
+      _logger.d('Error details: ${e.toString()}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error sending OTP: ${e.toString()}')),
+      );
+    }
   }
 
   void _navigateToVerifyOtp() {
