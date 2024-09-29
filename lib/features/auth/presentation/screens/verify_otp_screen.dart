@@ -63,31 +63,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
       _errorMessage = '';
     });
 
-    // Simulate API call delay
-    await Future.delayed(Duration(seconds: 2));
-
-    // Simulate OTP verification for development
-    if (_otpController.text == '1234') {
-      // Randomly decide if profile is complete (for testing both flows)
-      bool isProfileComplete = DateTime.now().millisecond % 2 == 0;
-
-      if (isProfileComplete) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => HomeScreen(isNewUser: false)),
-        );
-      } else {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => CompleteProfileScreen()),
-        );
-      }
-    } else {
-      setState(() {
-        _errorMessage = 'Invalid OTP. Please try again. Hint: Use 1234';
-      });
-    }
-
-    // Actual API implementation (commented out for now)
-    /*
+    // Actual API implementation
     try {
       final response = await _apiService.verifyOtp(
         widget.countryCode,
@@ -109,7 +85,26 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
         _errorMessage = 'Invalid OTP. Please try again.';
       });
     }
-    */
+
+    // Mock implementation (commented out)
+    // await Future.delayed(Duration(seconds: 2));
+    // if (_otpController.text == '1234') {
+    //   bool isProfileComplete = DateTime.now().millisecond % 2 == 0;
+
+    //   if (isProfileComplete) {
+    //     Navigator.of(context).pushReplacement(
+    //       MaterialPageRoute(builder: (_) => HomeScreen(isNewUser: false)),
+    //     );
+    //   } else {
+    //     Navigator.of(context).pushReplacement(
+    //       MaterialPageRoute(builder: (_) => CompleteProfileScreen()),
+    //     );
+    //   }
+    // } else {
+    //   setState(() {
+    //     _errorMessage = 'Invalid OTP. Please try again. Hint: Use 1234';
+    //   });
+    // }
 
     setState(() {
       _isLoading = false;

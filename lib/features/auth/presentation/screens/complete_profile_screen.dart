@@ -27,16 +27,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         _errorMessage = '';
       });
 
-      // Simulate API call delay
-      await Future.delayed(Duration(seconds: 2));
-
-      // Simulate successful profile completion for development
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => HomeScreen(isNewUser: true)),
-      );
-
-      // Actual API implementation (commented out for now)
-      /*
+      // Actual API implementation
       try {
         await _apiService.completeProfile(_name, _email, _nativeLanguage);
         Navigator.of(context).pushReplacement(
@@ -47,7 +38,12 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           _errorMessage = 'Failed to complete profile. Please try again.';
         });
       }
-      */
+
+      // Mock implementation (commented out)
+      // await Future.delayed(Duration(seconds: 2));
+      // Navigator.of(context).pushReplacement(
+      //   MaterialPageRoute(builder: (_) => HomeScreen(isNewUser: true)),
+      // );
 
       setState(() {
         _isLoading = false;

@@ -13,6 +13,7 @@ class PhoneEntryScreen extends StatefulWidget {
 }
 
 class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
+  final ApiService _apiService = ApiService();
   String _phoneNumber = '';
   String _countryCode = '';
   bool _isValid = false;
@@ -36,21 +37,20 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
   }
 
   Future<void> _sendOtp() async {
-    // TODO: Uncomment the following code when the real API is ready
-    // try {
-    //   final response = await ApiService.sendOtp(_countryCode, _phoneNumber);
-    //   if (response['message'] != null) {
-    //     _navigateToVerifyOtp();
-    //   }
-    // } catch (e) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(content: Text('Error sending OTP: $e')),
-    //   );
-    // }
+    try {
+      final response = await _apiService.sendOtp(_countryCode, _phoneNumber);
+      if (response['message'] != null) {
+        _navigateToVerifyOtp();
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error sending OTP: $e')),
+      );
+    }
 
-    // Mock API call for testing
-    await Future.delayed(Duration(seconds: 2)); // Simulate API delay
-    _navigateToVerifyOtp();
+    // Mock API call for testing (commented out)
+    // await Future.delayed(Duration(seconds: 2)); // Simulate API delay
+    // _navigateToVerifyOtp();
   }
 
   void _navigateToVerifyOtp() {

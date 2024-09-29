@@ -17,18 +17,17 @@ class ApiService {
 
   static String get _baseUrl => _isProduction ? _baseUrlProd : _baseUrlDev;
 
-  static Future<Map<String, dynamic>> sendOtp(String countryCode, String phoneNumber) async {
-    final response = await http.post(
-      Uri.parse('$_baseUrl/api/auth/send-otp'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
+  Future<Map<String, dynamic>> sendOtp(String countryCode, String phoneNumber) async {
+    final response = await _dio.post(
+      '$_baseUrl/api/auth/send-otp',
+      data: {
         'countryCode': countryCode,
         'phoneNumber': phoneNumber,
-      }),
+      },
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      return response.data;
     } else {
       throw Exception('Failed to send OTP');
     }

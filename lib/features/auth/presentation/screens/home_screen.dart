@@ -33,14 +33,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _fetchUserProfile() async {
-    // Mock API call
-    await Future.delayed(Duration(seconds: 1));
-    setState(() {
-      _userName = 'Michael';
-    });
-
-    // Actual API call (commented out)
-    /*
     try {
       final profile = await _apiService.getProfile();
       setState(() {
@@ -50,7 +42,12 @@ class _HomeScreenState extends State<HomeScreen> {
       print('Error fetching user profile: $e');
       // Handle error (e.g., show a snackbar)
     }
-    */
+
+    // Mock API call (commented out)
+    // await Future.delayed(Duration(seconds: 1));
+    // setState(() {
+    //   _userName = 'Michael';
+    // });
   }
 
   @override
