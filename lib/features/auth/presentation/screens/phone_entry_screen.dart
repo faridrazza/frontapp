@@ -4,7 +4,6 @@ import 'package:frontapp/features/auth/presentation/widgets/ai_orb.dart';
 import 'package:frontapp/features/auth/presentation/widgets/phone_input_field.dart';
 import 'package:frontapp/features/auth/presentation/screens/verify_otp_screen.dart';
 import 'package:frontapp/core/services/api_service.dart';
-import 'package:logger/logger.dart';
 
 class PhoneEntryScreen extends StatefulWidget {
   const PhoneEntryScreen({Key? key}) : super(key: key);
@@ -19,7 +18,6 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
   String _countryCode = '';
   bool _isValid = false;
   final ValueNotifier<bool> _isKeyboardVisible = ValueNotifier<bool>(false);
-  final Logger _logger = Logger();
 
   @override
   void initState() {
@@ -36,19 +34,10 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
       _phoneNumber = phoneNumber.replaceAll(RegExp(r'\D'), '');
       _isValid = isValid;
     });
-    _logger.d('Country code: $_countryCode');
-    _logger.d('Phone number: $_phoneNumber');
-    _logger.d('Is valid: $_isValid');
   }
 
   Future<void> _sendOtp() async {
-    _logger.i('Attempting to send OTP');
-    _logger.d('Country code: $_countryCode');
-    _logger.d('Phone number: $_phoneNumber');
-    _logger.d('Is valid: $_isValid');
-
     if (!_isValid) {
-      _logger.w('Phone number is not valid. Aborting OTP send.');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please enter a valid phone number')),
       );
@@ -56,23 +45,15 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
     }
 
     try {
-      _logger.d('Calling API service to send OTP');
       final response = await _apiService.sendOtp(_countryCode, _phoneNumber);
-      _logger.i('OTP sent successfully');
-      _logger.d('API response: $response');
-
       if (response['message'] != null) {
-        _logger.d('Navigating to VerifyOtpScreen');
         _navigateToVerifyOtp();
       } else {
-        _logger.w('Unexpected API response format');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Unexpected error occurred')),
         );
       }
     } catch (e) {
-      _logger.e('Error sending OTP', error: e);
-      _logger.d('Error details: ${e.toString()}');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error sending OTP: ${e.toString()}')),
       );

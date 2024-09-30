@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
-import 'package:logger/logger.dart';
 
 class PhoneInputField extends StatefulWidget {
   final Function(String, String, bool) onInputChanged;
@@ -17,7 +16,6 @@ class _PhoneInputFieldState extends State<PhoneInputField> {
   String initialCountry = 'IN';
   PhoneNumber number = PhoneNumber(isoCode: 'IN');
   bool isValid = false;
-  final Logger _logger = Logger();
 
   @override
   Widget build(BuildContext context) {
@@ -36,17 +34,12 @@ class _PhoneInputFieldState extends State<PhoneInputField> {
                 setState(() {
                   this.number = number;
                 });
-                _logger.d('Phone number changed');
-                _logger.d('Country code: ${number.dialCode}');
-                _logger.d('Phone number: ${number.phoneNumber}');
                 widget.onInputChanged(number.dialCode ?? '', number.phoneNumber ?? '', isValid);
               },
               onInputValidated: (bool value) {
                 setState(() {
                   isValid = value;
                 });
-                _logger.d('Phone number validated');
-                _logger.d('Is valid: $value');
                 widget.onInputChanged(number.dialCode ?? '', number.phoneNumber ?? '', value);
               },
               selectorConfig: const SelectorConfig(

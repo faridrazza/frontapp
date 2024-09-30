@@ -10,6 +10,7 @@ import '../widgets/voice_input_button.dart';
 import '../../domain/models/message.dart';
 import '../../../../core/utils/audio_utils.dart';
 import '../widgets/scrollable_chat_view.dart';
+import 'package:logger/logger.dart';
 
 class SpeakWithAIScreen extends StatefulWidget {
   @override
@@ -19,6 +20,7 @@ class SpeakWithAIScreen extends StatefulWidget {
 class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
+  final Logger _logger = Logger();
 
   @override
   void initState() {
@@ -30,6 +32,7 @@ class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTicker
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
+    _logger.i('SpeakWithAIScreen initialized');
   }
 
   @override
@@ -172,6 +175,8 @@ class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTicker
           _buildTextInputButton(),
           VoiceInputButton(
             onRecordingComplete: (message) {
+              _logger.i('Recording completed. Message: $message');
+              print("Recording completed. Sending message: $message");
               context.read<SpeakWithAIBloc>().add(SendMessage(message));
             },
           ),

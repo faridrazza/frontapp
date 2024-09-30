@@ -2,12 +2,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:logger/logger.dart';
 
 class ApiService {
   final Dio _dio = Dio();
   final FlutterSecureStorage _storage = FlutterSecureStorage();
-  final Logger _logger = Logger();
 
   // Use this for local development
   static const String _baseUrlDev = 'http://192.168.0.104:5000'; // Replace with your computer's IP
@@ -20,11 +18,6 @@ class ApiService {
   static String get _baseUrl => _isProduction ? _baseUrlProd : _baseUrlDev;
 
   Future<Map<String, dynamic>> sendOtp(String countryCode, String phoneNumber) async {
-    _logger.i('Sending OTP');
-    _logger.d('Country code: $countryCode');
-    _logger.d('Phone number: $phoneNumber');
-    _logger.d('Base URL: $_baseUrl');
-
     // Ensure country code starts with '+' and is not longer than 4 characters
     if (!countryCode.startsWith('+')) {
       countryCode = '+$countryCode';
@@ -36,11 +29,7 @@ class ApiService {
     // Remove any non-digit characters from the phone number
     phoneNumber = phoneNumber.replaceAll(RegExp(r'\D'), '');
 
-    _logger.d('Formatted country code: $countryCode');
-    _logger.d('Formatted phone number: $phoneNumber');
-
     try {
-      _logger.d('Preparing API request');
       final response = await _dio.post(
         '$_baseUrl/api/auth/send-otp',
         data: {
@@ -49,31 +38,12 @@ class ApiService {
         },
       );
 
-      _logger.d('API response received');
-      _logger.d('Status code: ${response.statusCode}');
-      _logger.d('Response data: ${response.data}');
-
       if (response.statusCode == 200) {
-        _logger.i('OTP sent successfully');
         return response.data;
       } else {
-        _logger.w('Failed to send OTP');
-        _logger.w('Status code: ${response.statusCode}');
-        _logger.w('Response data: ${response.data}');
         throw Exception('Failed to send OTP');
       }
     } catch (e) {
-      _logger.e('Error sending OTP', error: e);
-      if (e is DioException) {
-        _logger.d('DioException details:');
-        _logger.d('Type: ${e.type}');
-        _logger.d('Message: ${e.message}');
-        _logger.d('Response: ${e.response}');
-        if (e.response != null) {
-          _logger.d('Response status code: ${e.response?.statusCode}');
-          _logger.d('Response data: ${e.response?.data}');
-        }
-      }
       throw Exception('Error sending OTP: $e');
     }
   }
