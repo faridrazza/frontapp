@@ -90,7 +90,7 @@ class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTicker
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('AI ASMA', style: TextStyle(color: Color(0xFFC6F432), fontSize: 18, fontWeight: FontWeight.bold)),
+              Text('AI FARID', style: TextStyle(color: Color(0xFFC6F432), fontSize: 18, fontWeight: FontWeight.bold)),
               Row(
                 children: [
                   Container(
