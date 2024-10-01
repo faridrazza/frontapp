@@ -55,10 +55,8 @@ class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTicker
                 builder: (context, state) {
                   if (state is SpeakWithAIInitial) {
                     return _buildInitialState(context);
-                  } else if (state is SpeakWithAIConversation) {
+                  } else if (state is SpeakWithAIConversation || state is SpeakWithAIEnded) {
                     return _buildConversationState(context, state);
-                  } else if (state is SpeakWithAIEnded) {
-                    return Center(child: Text('Roleplay ended. Feedback: ${state.feedback}', style: TextStyle(color: Colors.white)));
                   } else if (state is SpeakWithAIError) {
                     return Center(child: Text('Error: ${state.message}', style: TextStyle(color: Colors.white)));
                   } else {
@@ -158,10 +156,48 @@ class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTicker
     );
   }
 
-  Widget _buildConversationState(BuildContext context, SpeakWithAIConversation state) {
-    return ScrollableChatView(
-      messages: state.messages,
-      isLoading: state.isLoading,
+  Widget _buildConversationState(BuildContext context, SpeakWithAIState state) {
+    if (state is SpeakWithAIConversation) {
+      return ScrollableChatView(
+        messages: state.messages,
+        isLoading: state.isLoading,
+      );
+    } else if (state is SpeakWithAIEnded) {
+      return _buildFeedbackView(state.feedback);
+    } else {
+      return Center(child: Text('Unexpected state', style: TextStyle(color: Colors.white)));
+    }
+  }
+
+  Widget _buildFeedbackView(Map<String, dynamic> feedback) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Roleplay Feedback', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+          SizedBox(height: 16),
+          _buildFeedbackSection('Grammar', feedback['grammar']),
+          _buildFeedbackSection('Pronunciation', feedback['pronunciation']),
+          _buildFeedbackSection('Vocabulary', feedback['vocabulary']),
+          _buildFeedbackSection('Suggestions', feedback['suggestions']),
+          _buildFeedbackSection('Error Corrections', feedback['errorCorrections']),
+          _buildFeedbackSection('Effective Words', feedback['effectiveWords']),
+          _buildFeedbackSection('Overall Feedback', feedback['overallFeedback']),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeedbackSection(String title, String content) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: TextStyle(color: Color(0xFFC6F432), fontSize: 18, fontWeight: FontWeight.bold)),
+        SizedBox(height: 8),
+        Text(content, style: TextStyle(color: Colors.white, fontSize: 16)),
+        SizedBox(height: 16),
+      ],
     );
   }
 

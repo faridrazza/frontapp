@@ -5,7 +5,7 @@ abstract class SpeakWithAIState extends Equatable {
   const SpeakWithAIState();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 class SpeakWithAIInitial extends SpeakWithAIState {}
@@ -36,7 +36,7 @@ class SpeakWithAIConversation extends SpeakWithAIState {
   }
 
   @override
-  List<Object> get props => [conversationId, messages, isLoading];
+  List<Object?> get props => [conversationId, messages, isLoading];
 }
 
 class SpeakWithAIEnded extends SpeakWithAIState {
@@ -45,7 +45,7 @@ class SpeakWithAIEnded extends SpeakWithAIState {
   const SpeakWithAIEnded({required this.feedback});
 
   @override
-  List<Object> get props => [feedback];
+  List<Object?> get props => [feedback];
 }
 
 class SpeakWithAIError extends SpeakWithAIState {

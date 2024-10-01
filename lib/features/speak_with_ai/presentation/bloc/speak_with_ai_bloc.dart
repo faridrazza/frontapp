@@ -59,6 +59,8 @@ class SpeakWithAIBloc extends Bloc<SpeakWithAIEvent, SpeakWithAIState> {
         if (data is Map<String, dynamic>) {
           if (data['intent'] == 'end_roleplay') {
             add(EndRoleplay(data['feedback']));
+            // Add the final AI message
+            add(ReceiveMessage(data['aiResponse'], data['audioBuffer']));
           } else {
             add(ReceiveMessage(data['aiResponse'], data['audioBuffer']));
           }
