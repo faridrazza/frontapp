@@ -4,6 +4,7 @@ import 'speak_with_ai_event.dart';
 import 'speak_with_ai_state.dart';
 import '../../domain/models/message.dart';
 import 'dart:async';
+import 'dart:convert';
 import 'package:logger/logger.dart';
 
 class SpeakWithAIBloc extends Bloc<SpeakWithAIEvent, SpeakWithAIState> {
@@ -47,15 +48,27 @@ class SpeakWithAIBloc extends Bloc<SpeakWithAIEvent, SpeakWithAIState> {
     _wsSubscription = _repository.aiResponses.listen(
       (data) {
         _logger.i('Received WebSocket data: $data');
-        if (data['intent'] == 'end_roleplay') {
-          add(EndRoleplay(data['feedback']));
+        if (data is String) {
+          // If data is a string, try to parse it as JSON
+          try {
+            data = jsonDecode(data);
+          } catch (e) {
+            _logger.e('Failed to parse WebSocket data as JSON: $e');
+          }
+        }
+        if (data is Map<String, dynamic>) {
+          if (data['intent'] == 'end_roleplay') {
+            add(EndRoleplay(data['feedback']));
+          } else {
+            add(ReceiveMessage(data['aiResponse'], data['audioBuffer']));
+          }
         } else {
-          add(ReceiveMessage(data['aiResponse'], data['audioBuffer']));
+          _logger.w('Received unexpected WebSocket data format: $data');
         }
       },
       onError: (error) {
         _logger.e('WebSocket error: $error');
-        add(ReceiveMessage(error.toString(), null));
+        add(ReceiveMessage('Error: $error', null));
       },
     );
   }

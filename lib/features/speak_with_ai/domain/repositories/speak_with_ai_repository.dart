@@ -34,9 +34,9 @@ class SpeakWithAIRepository {
   }
 
   Stream<dynamic> get aiResponses => _webSocketService.stream.map((event) {
-        _logger.i('Received WebSocket message: $event');
-        return event;
-      });
+    _logger.i('Received WebSocket message: $event');
+    return event;
+  });
 
   void closeWebSocket() {
     _logger.i('Closing WebSocket');

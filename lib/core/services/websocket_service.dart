@@ -1,6 +1,7 @@
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dart:async';
 import 'package:logger/logger.dart';
+import 'dart:convert';
 
 class WebSocketService {
   WebSocketChannel? _channel;
@@ -38,7 +39,15 @@ class WebSocketService {
   }
 
   Stream<dynamic> get stream => _channel!.stream.map((event) {
-        _logger.i('Received WebSocket message: $event');
+        _logger.i('Received raw WebSocket message: $event');
+        if (event is String) {
+          try {
+            return jsonDecode(event);
+          } catch (e) {
+            _logger.e('Failed to parse WebSocket message as JSON: $e');
+            return event;
+          }
+        }
         return event;
       }).handleError((error) {
         _logger.e('WebSocket stream error: $error');
