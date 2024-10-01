@@ -138,11 +138,13 @@ class ApiService {
       );
       print('Response received: ${response.statusCode}');
       if (response.statusCode == 200) {
+        // Assuming the backend now includes userId in the response
         return {
           'conversationId': response.data['conversationId'],
           'initialPrompt': response.data['initialPrompt'],
           'audioBuffer': response.data['audioBuffer'],
           'wsUrl': response.data['wsUrl'],
+          'userId': response.data['userId'], // Add this line
         };
       } else {
         throw Exception('Failed to start roleplay');

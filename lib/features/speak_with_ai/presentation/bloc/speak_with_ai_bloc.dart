@@ -10,7 +10,8 @@ class SpeakWithAIBloc extends Bloc<SpeakWithAIEvent, SpeakWithAIState> {
   final SpeakWithAIRepository _repository;
   StreamSubscription? _wsSubscription;
   final Logger _logger = Logger();
-  String? _lastKnownWsUrl;  // Add this line
+  String? _lastKnownWsUrl;
+  String? _userId;
 
   SpeakWithAIBloc(this._repository) : super(SpeakWithAIInitial()) {
     on<StartRoleplay>(_onStartRoleplay);
@@ -25,11 +26,13 @@ class SpeakWithAIBloc extends Bloc<SpeakWithAIEvent, SpeakWithAIState> {
     try {
       final response = await _repository.startRoleplay(event.scenario);
       _logger.i('Roleplay started. Connecting to WebSocket: ${response['wsUrl']}');
-      _lastKnownWsUrl = response['wsUrl'];  // Add this line
-      await _repository.connectWebSocket(_lastKnownWsUrl!);
+      _lastKnownWsUrl = response['wsUrl'];
+      _userId = response['userId'];
+      final conversationId = response['conversationId'];
+      await _repository.connectWebSocket(_lastKnownWsUrl!, _userId!, conversationId);
       _listenToWebSocket();
       emit(SpeakWithAIConversation(
-        conversationId: response['conversationId'],
+        conversationId: conversationId,
         messages: [Message(content: response['initialPrompt'], type: MessageType.ai, audioBuffer: response['audioBuffer'])],
       ));
       _logger.i('Emitted initial conversation state');
@@ -108,11 +111,12 @@ class SpeakWithAIBloc extends Bloc<SpeakWithAIEvent, SpeakWithAIState> {
     int attempts = 0;
     while (attempts < 3) {
       try {
-        if (_lastKnownWsUrl == null) {
-          _logger.e('No known WebSocket URL to reconnect to');
+        if (_lastKnownWsUrl == null || _userId == null || (state is! SpeakWithAIConversation)) {
+          _logger.e('Missing information for WebSocket reconnection');
           break;
         }
-        await _repository.connectWebSocket(_lastKnownWsUrl!);
+        final conversationId = (state as SpeakWithAIConversation).conversationId;
+        await _repository.connectWebSocket(_lastKnownWsUrl!, _userId!, conversationId);
         _listenToWebSocket();
         _logger.i('WebSocket reconnected successfully');
         return;

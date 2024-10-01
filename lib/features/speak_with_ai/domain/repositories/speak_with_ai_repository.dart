@@ -18,7 +18,8 @@ class SpeakWithAIRepository {
     return response;
   }
 
-  Future<void> connectWebSocket(String url) async {
+  Future<void> connectWebSocket(String wsUrl, String userId, String conversationId) async {
+    final url = '$wsUrl?userId=$userId&conversationId=$conversationId';
     _logger.i('Connecting to WebSocket: $url');
     await _webSocketService.connect(url);
     _logger.i('WebSocket connected');
