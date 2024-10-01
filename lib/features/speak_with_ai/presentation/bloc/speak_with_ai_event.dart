@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../domain/models/roleplay_feedback.dart';
 
 abstract class SpeakWithAIEvent extends Equatable {
   const SpeakWithAIEvent();
@@ -36,10 +37,12 @@ class ReceiveMessage extends SpeakWithAIEvent {
 }
 
 class EndRoleplay extends SpeakWithAIEvent {
-  final Map<String, dynamic> feedback;
+  final RoleplayFeedback feedback;
 
-  const EndRoleplay(this.feedback);
+  EndRoleplay(this.feedback);
 
   @override
   List<Object> get props => [feedback];
 }
+
+class ResetRoleplay extends SpeakWithAIEvent {}

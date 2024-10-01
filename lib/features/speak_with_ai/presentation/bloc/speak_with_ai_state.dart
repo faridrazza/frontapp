@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../domain/models/message.dart';
+import '../../domain/models/roleplay_feedback.dart';
 
 abstract class SpeakWithAIState extends Equatable {
   const SpeakWithAIState();
@@ -40,7 +41,7 @@ class SpeakWithAIConversation extends SpeakWithAIState {
 }
 
 class SpeakWithAIEnded extends SpeakWithAIState {
-  final Map<String, dynamic> feedback;
+  final RoleplayFeedback feedback;
 
   const SpeakWithAIEnded({required this.feedback});
 

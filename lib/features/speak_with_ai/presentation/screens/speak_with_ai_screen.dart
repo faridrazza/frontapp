@@ -11,6 +11,7 @@ import '../../domain/models/message.dart';
 import '../../../../core/utils/audio_utils.dart';
 import '../widgets/scrollable_chat_view.dart';
 import 'package:logger/logger.dart';
+import '../../domain/models/roleplay_feedback.dart';
 
 class SpeakWithAIScreen extends StatefulWidget {
   @override
@@ -169,7 +170,7 @@ class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTicker
     }
   }
 
-  Widget _buildFeedbackView(Map<String, dynamic> feedback) {
+  Widget _buildFeedbackView(RoleplayFeedback feedback) {
     return SingleChildScrollView(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -177,27 +178,42 @@ class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTicker
         children: [
           Text('Roleplay Feedback', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
           SizedBox(height: 16),
-          _buildFeedbackSection('Grammar', feedback['grammar']),
-          _buildFeedbackSection('Pronunciation', feedback['pronunciation']),
-          _buildFeedbackSection('Vocabulary', feedback['vocabulary']),
-          _buildFeedbackSection('Suggestions', feedback['suggestions']),
-          _buildFeedbackSection('Error Corrections', feedback['errorCorrections']),
-          _buildFeedbackSection('Effective Words', feedback['effectiveWords']),
-          _buildFeedbackSection('Overall Feedback', feedback['overallFeedback']),
+          _buildFeedbackSection('Grammar', feedback.grammar),
+          _buildFeedbackSection('Vocabulary', feedback.vocabulary),
+          _buildFeedbackSection('Suggestions', feedback.suggestions),
+          _buildFeedbackSection('Error Corrections', feedback.errorCorrections),
+          _buildFeedbackSection('Effective Words', feedback.effectiveWords),
+          SizedBox(height: 20),
+          _buildRestartButton(),
         ],
       ),
     );
   }
 
   Widget _buildFeedbackSection(String title, String content) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return ExpansionTile(
+      title: Text(title, style: TextStyle(color: Color(0xFFC6F432), fontSize: 18, fontWeight: FontWeight.bold)),
       children: [
-        Text(title, style: TextStyle(color: Color(0xFFC6F432), fontSize: 18, fontWeight: FontWeight.bold)),
-        SizedBox(height: 8),
-        Text(content, style: TextStyle(color: Colors.white, fontSize: 16)),
-        SizedBox(height: 16),
+        Padding(
+          padding: EdgeInsets.all(16),
+          child: Text(content, style: TextStyle(color: Colors.white, fontSize: 16)),
+        ),
       ],
+      collapsedIconColor: Colors.white,
+      iconColor: Colors.white,
+    );
+  }
+
+  Widget _buildRestartButton() {
+    return ElevatedButton(
+      child: Text('Start New Roleplay'),
+      onPressed: () {
+        context.read<SpeakWithAIBloc>().add(ResetRoleplay());
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Color(0xFFC6F432),  // Changed from primary to backgroundColor
+        foregroundColor: Colors.black,  // Changed from onPrimary to foregroundColor
+      ),
     );
   }
 

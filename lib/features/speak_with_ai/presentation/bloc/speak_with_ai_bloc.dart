@@ -3,6 +3,7 @@ import '../../domain/repositories/speak_with_ai_repository.dart';
 import 'speak_with_ai_event.dart';
 import 'speak_with_ai_state.dart';
 import '../../domain/models/message.dart';
+import '../../domain/models/roleplay_feedback.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:logger/logger.dart';
@@ -19,6 +20,9 @@ class SpeakWithAIBloc extends Bloc<SpeakWithAIEvent, SpeakWithAIState> {
     on<SendMessage>(_onSendMessage);
     on<ReceiveMessage>(_onReceiveMessage);
     on<EndRoleplay>(_onEndRoleplay);
+    on<ResetRoleplay>((event, emit) {
+      emit(SpeakWithAIInitial());
+    });
   }
 
   void _onStartRoleplay(StartRoleplay event, Emitter<SpeakWithAIState> emit) async {
@@ -54,13 +58,15 @@ class SpeakWithAIBloc extends Bloc<SpeakWithAIEvent, SpeakWithAIState> {
             data = jsonDecode(data);
           } catch (e) {
             _logger.e('Failed to parse WebSocket data as JSON: $e');
+            return;
           }
         }
         if (data is Map<String, dynamic>) {
           if (data['intent'] == 'end_roleplay') {
-            add(EndRoleplay(data['feedback']));
-            // Add the final AI message
+            // First, add the final AI message
             add(ReceiveMessage(data['aiResponse'], data['audioBuffer']));
+            // Then, end the roleplay
+            add(EndRoleplay(RoleplayFeedback.fromJson(data['feedback'])));
           } else {
             add(ReceiveMessage(data['aiResponse'], data['audioBuffer']));
           }
@@ -118,8 +124,12 @@ class SpeakWithAIBloc extends Bloc<SpeakWithAIEvent, SpeakWithAIState> {
 
   void _onEndRoleplay(EndRoleplay event, Emitter<SpeakWithAIState> emit) {
     _logger.i('Ending roleplay');
-    _repository.closeWebSocket();
-    emit(SpeakWithAIEnded(feedback: event.feedback));
+    if (state is SpeakWithAIConversation) {
+      _repository.closeWebSocket();
+      emit(SpeakWithAIEnded(feedback: event.feedback));
+    } else {
+      _logger.w('Attempted to end roleplay while not in conversation state');
+    }
   }
 
   Future<void> _reconnectWebSocket() async {
