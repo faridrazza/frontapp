@@ -18,7 +18,7 @@ class SpeakWithAIScreen extends StatefulWidget {
   _SpeakWithAIScreenState createState() => _SpeakWithAIScreenState();
 }
 
-class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTickerProviderStateMixin {
+class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
   final Logger _logger = Logger();
@@ -28,6 +28,7 @@ class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTicker
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _animationController = AnimationController(
       vsync: this,
       duration: Duration(seconds: 10), // Increased duration for slower rotation
@@ -40,9 +41,18 @@ class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTicker
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    AudioUtils.stopAudio();
     _animationController.dispose();
     _textController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      AudioUtils.stopAudio();
+    }
   }
 
   @override
@@ -340,7 +350,10 @@ class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTicker
       ),
       child: IconButton(
         icon: Icon(Icons.close, color: Colors.white),
-        onPressed: () => Navigator.of(context).pop(),
+        onPressed: () {
+          AudioUtils.stopAudio();
+          Navigator.of(context).pop();
+        },
       ),
     );
   }

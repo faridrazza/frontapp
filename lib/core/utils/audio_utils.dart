@@ -29,7 +29,18 @@ class AudioUtils {
       await _player!.startPlayer(fromDataBuffer: audioData);
     } catch (e) {
       print("Error playing audio: $e");
-      // You might want to show a snackbar or toast here to inform the user
+    }
+  }
+
+  static Future<void> stopAudio() async {
+    try {
+      if (_player != null && _player!.isPlaying) {
+        await _player!.stopPlayer();
+        await _player!.closePlayer();
+        _player = null;
+      }
+    } catch (e) {
+      print("Error stopping audio: $e");
     }
   }
 }
