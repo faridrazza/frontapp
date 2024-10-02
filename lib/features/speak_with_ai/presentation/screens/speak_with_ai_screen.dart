@@ -22,6 +22,8 @@ class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTicker
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
   final Logger _logger = Logger();
+  bool _showTextInput = false;
+  TextEditingController _textController = TextEditingController();
 
   @override
   void initState() {
@@ -39,6 +41,7 @@ class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTicker
   @override
   void dispose() {
     _animationController.dispose();
+    _textController.dispose();
     super.dispose();
   }
 
@@ -231,39 +234,91 @@ class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTicker
     return Container(
       padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
       color: Colors.black,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          _buildTextInputButton(),
-          VoiceInputButton(
-            onRecordingComplete: (message) {
-              _logger.i('Recording completed. Message: $message');
-              print("Recording completed. Sending message: $message");
-              context.read<SpeakWithAIBloc>().add(SendMessage(message));
+          if (_showTextInput)
+            _buildTextInputField(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildTextInputButton(),
+              VoiceInputButton(
+                onRecordingComplete: (message) {
+                  _logger.i('Recording completed. Message: $message');
+                  print("Recording completed. Sending message: $message");
+                  context.read<SpeakWithAIBloc>().add(SendMessage(message));
+                },
+              ),
+              _buildCancelButton(context),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextInputField() {
+    return Container(
+      margin: EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _textController,
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: 'Type your message...',
+                hintStyle: TextStyle(color: Colors.grey),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.send, color: Color(0xFFC6F432)),
+            onPressed: () {
+              if (_textController.text.isNotEmpty) {
+                context.read<SpeakWithAIBloc>().add(SendMessage(_textController.text));
+                _textController.clear();
+                setState(() {
+                  _showTextInput = false;
+                });
+              }
             },
           ),
-          _buildCancelButton(context),
         ],
       ),
     );
   }
 
   Widget _buildTextInputButton() {
-    return Container(
-      width: 50,
-      height: 50,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.purple.withOpacity(0.3),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.purple.withOpacity(0.2),
-            blurRadius: 10,
-            spreadRadius: 2,
-          ),
-        ],
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _showTextInput = !_showTextInput;
+        });
+      },
+      child: Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.purple.withOpacity(0.3),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.purple.withOpacity(0.2),
+              blurRadius: 10,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: Icon(Icons.chat_bubble_outline, color: Colors.white),
       ),
-      child: Icon(Icons.chat_bubble_outline, color: Colors.white),
     );
   }
 
