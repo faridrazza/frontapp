@@ -7,6 +7,9 @@ import 'package:frontapp/features/speak_with_ai/presentation/bloc/speak_with_ai_
 import 'package:frontapp/features/speak_with_ai/domain/repositories/speak_with_ai_repository.dart';
 import 'package:frontapp/core/services/websocket_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:frontapp/features/rapid_translation/presentation/bloc/rapid_translation_bloc.dart';
+import 'package:frontapp/features/rapid_translation/presentation/screens/game_setup_screen.dart';
+import 'package:frontapp/features/rapid_translation/domain/repositories/rapid_translation_repository.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isNewUser;
@@ -168,6 +171,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 child: SpeakWithAIScreen(),
+              ),
+            ),
+          );
+        } else if (label == 'Rapid Sentence') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BlocProvider(
+                create: (context) => RapidTranslationBloc(
+                  RapidTranslationRepository(ApiService()),
+                ),
+                child: GameSetupScreen(),
               ),
             ),
           );

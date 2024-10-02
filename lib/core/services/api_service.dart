@@ -124,8 +124,6 @@ class ApiService {
     }
   }
 
- 
-
   Future<Map<String, dynamic>> startRoleplay(String scenario) async {
     try {
       final token = await _storage.read(key: 'auth_token');
@@ -152,6 +150,106 @@ class ApiService {
     } catch (e) {
       print('Error details: $e');
       throw Exception('Error starting roleplay: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> startTranslationGame(String level, String? timer) async {
+    try {
+      final token = await _storage.read(key: 'auth_token');
+      final response = await _dio.post(
+        '$_baseUrl/api/ai/start-translation',
+        data: {
+          'gameLevel': level,
+          'timer': timer,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Failed to start game');
+      }
+    } catch (e) {
+      throw Exception('Error starting game: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> getNextSentence(String gameSessionId) async {
+    try {
+      final token = await _storage.read(key: 'auth_token');
+      final response = await _dio.post(
+        '$_baseUrl/api/rapid-translation/get-next-sentence',
+        data: {'gameSessionId': gameSessionId},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Failed to get next sentence');
+      }
+    } catch (e) {
+      throw Exception('Error getting next sentence: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> submitTranslation(String gameSessionId, String translation, int timeTaken) async {
+    try {
+      final token = await _storage.read(key: 'auth_token');
+      final response = await _dio.post(
+        '$_baseUrl/api/rapid-translation/submit-translation',
+        data: {
+          'gameSessionId': gameSessionId,
+          'translation': translation,
+          'timeTaken': timeTaken,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Failed to submit translation');
+      }
+    } catch (e) {
+      throw Exception('Error submitting translation: $e');
+    }
+  }
+
+  Future<void> timeUp(String gameSessionId) async {
+    try {
+      final token = await _storage.read(key: 'auth_token');
+      final response = await _dio.post(
+        '$_baseUrl/api/rapid-translation/time-up',
+        data: {'gameSessionId': gameSessionId},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to handle time up');
+      }
+    } catch (e) {
+      throw Exception('Error handling time up: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> endTranslationGame(String gameSessionId) async {
+    try {
+      final token = await _storage.read(key: 'auth_token');
+      final response = await _dio.post(
+        '$_baseUrl/api/rapid-translation/end-translation-game',
+        data: {'gameSessionId': gameSessionId},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Failed to end game');
+      }
+    } catch (e) {
+      throw Exception('Error ending game: $e');
     }
   }
 }
