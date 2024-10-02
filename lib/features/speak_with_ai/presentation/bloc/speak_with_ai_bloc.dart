@@ -104,7 +104,7 @@ class SpeakWithAIBloc extends Bloc<SpeakWithAIEvent, SpeakWithAIState> {
       _logger.i('Message sent, waiting for AI response');
       
       // Add timeout
-      await Future.delayed(Duration(seconds: 30));
+      await Future.delayed(Duration(seconds: 50));
       if (state is SpeakWithAIConversation && (state as SpeakWithAIConversation).isLoading) {
         _logger.w('AI response timeout');
         emit((state as SpeakWithAIConversation).copyWith(isLoading: false));
