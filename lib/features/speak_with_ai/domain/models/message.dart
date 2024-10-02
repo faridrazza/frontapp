@@ -2,8 +2,12 @@ enum MessageType { user, ai }
 
 class Message {
   final String content;
-  final MessageType type;
+  final bool isAI;
   final String? audioBuffer;
 
-  Message({required this.content, required this.type, this.audioBuffer});
+  Message({
+    required this.content,
+    required this.isAI,
+    this.audioBuffer,
+  });
 }

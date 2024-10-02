@@ -44,30 +44,40 @@ class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Divider(color: Colors.grey[800], height: 1),
-            Expanded(
-              child: BlocBuilder<SpeakWithAIBloc, SpeakWithAIState>(
-                builder: (context, state) {
-                  if (state is SpeakWithAIInitial) {
-                    return _buildInitialState(context);
-                  } else if (state is SpeakWithAIConversation || state is SpeakWithAIEnded) {
-                    return _buildConversationState(context, state);
-                  } else if (state is SpeakWithAIError) {
-                    return Center(child: Text('Error: ${state.message}', style: TextStyle(color: Colors.white)));
-                  } else {
-                    return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC6F432))));
-                  }
-                },
+    return BlocListener<SpeakWithAIBloc, SpeakWithAIState>(
+      listener: (context, state) {
+        if (state is SpeakWithAIConversation && state.messages.isNotEmpty) {
+          final lastMessage = state.messages.last;
+          if (lastMessage.isAI && lastMessage.audioBuffer != null) {
+            AudioUtils.playAudio(lastMessage.audioBuffer!);
+          }
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildHeader(),
+              Divider(color: Colors.grey[800], height: 1),
+              Expanded(
+                child: BlocBuilder<SpeakWithAIBloc, SpeakWithAIState>(
+                  builder: (context, state) {
+                    if (state is SpeakWithAIInitial) {
+                      return _buildInitialState(context);
+                    } else if (state is SpeakWithAIConversation || state is SpeakWithAIEnded) {
+                      return _buildConversationState(context, state);
+                    } else if (state is SpeakWithAIError) {
+                      return Center(child: Text('Error: ${state.message}', style: TextStyle(color: Colors.white)));
+                    } else {
+                      return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC6F432))));
+                    }
+                  },
+                ),
               ),
-            ),
-            _buildBottomBar(context),
-          ],
+              _buildBottomBar(context),
+            ],
+          ),
         ),
       ),
     );

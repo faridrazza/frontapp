@@ -40,8 +40,8 @@ class _ScrollableChatViewState extends State<ScrollableChatView> {
           return Center(child: CircularProgressIndicator());
         }
         final message = widget.messages[index];
-        return message.type == MessageType.ai
-            ? AiMessageBubble(message: message)
+        return message.isAI
+            ? AIMessageBubble(message: message)
             : UserMessageBubble(message: message);
       },
     );

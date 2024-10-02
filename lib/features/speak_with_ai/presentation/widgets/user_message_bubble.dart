@@ -8,31 +8,24 @@ class UserMessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                message.content,
-                style: TextStyle(color: Colors.white),
-                textAlign: TextAlign.right,
-              ),
-            ),
+    return Align(
+      alignment: Alignment.centerRight,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
+        ),
+        child: Container(
+          margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: Color(0xFF3369FF),
+            borderRadius: BorderRadius.circular(20),
           ),
-          SizedBox(width: 8),
-          CircleAvatar(
-            backgroundColor: Colors.blue,
-            child: Icon(Icons.person, color: Colors.white),
+          child: Text(
+            message.content,
+            style: TextStyle(color: Colors.white),
           ),
-        ],
+        ),
       ),
     );
   }

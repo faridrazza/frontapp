@@ -38,7 +38,11 @@ class SpeakWithAIBloc extends Bloc<SpeakWithAIEvent, SpeakWithAIState> {
       _listenToWebSocket();
       emit(SpeakWithAIConversation(
         conversationId: conversationId,
-        messages: [Message(content: response['initialPrompt'], type: MessageType.ai, audioBuffer: response['audioBuffer'])],
+        messages: [Message(
+          content: response['initialPrompt'],
+          isAI: true,
+          audioBuffer: response['audioBuffer']
+        )],
       ));
       _logger.i('Emitted initial conversation state');
     } catch (e) {
@@ -90,7 +94,10 @@ class SpeakWithAIBloc extends Bloc<SpeakWithAIEvent, SpeakWithAIState> {
     if (state is SpeakWithAIConversation) {
       final currentState = state as SpeakWithAIConversation;
       emit(currentState.copyWith(
-        messages: [...currentState.messages, Message(content: event.message, type: MessageType.user)],
+        messages: [...currentState.messages, Message(
+          content: event.message,
+          isAI: false
+        )],
         isLoading: true,
       ));
       _repository.sendMessage(currentState.conversationId, event.message);
@@ -113,7 +120,11 @@ class SpeakWithAIBloc extends Bloc<SpeakWithAIEvent, SpeakWithAIState> {
     if (state is SpeakWithAIConversation) {
       final currentState = state as SpeakWithAIConversation;
       emit(currentState.copyWith(
-        messages: [...currentState.messages, Message(content: event.message, type: MessageType.ai, audioBuffer: event.audioBuffer)],
+        messages: [...currentState.messages, Message(
+          content: event.message,
+          isAI: true,
+          audioBuffer: event.audioBuffer
+        )],
         isLoading: false,
       ));
       _logger.i('Updated conversation with AI response');
