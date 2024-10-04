@@ -11,6 +11,7 @@ import 'package:frontapp/features/rapid_translation/domain/models/chat_message.d
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:logger/logger.dart';
+import 'dart:async'; // Add this import
 
 class RapidTranslationGameScreen extends StatefulWidget {
   final String targetLanguage;
@@ -37,6 +38,8 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   ScrollController _scrollController = ScrollController();
   bool _isLoading = false;
   bool _showIndicator = false;
+  Timer? _timer;
+  int _remainingTime = 0;
 
   @override
   void initState() {
@@ -225,40 +228,49 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   }
 
   Widget _buildBottomActions() {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          // Text Input Button
-          _buildCircularButton(
-            onPressed: _showTextInput,
-            backgroundColor: Colors.grey[800]!,
-            icon: Icons.keyboard,
-            iconColor: Colors.white,
+    return Column(
+      children: [
+        if (_selectedTimer != 'No Timer' && _isGameStarted)
+          Text(
+            'Time remaining: $_remainingTime seconds',
+            style: TextStyle(color: Colors.white),
           ),
-          // Microphone Button
-          Transform.scale(
-            scale: 1.2,
-            child: _buildCircularButton(
-              onPressed: _isListening ? _stopListening : _startListening,
-              backgroundColor: Color(0xFFC6F432),
-              icon: _isListening ? Icons.mic_off : Icons.mic,
-              iconColor: Colors.black,
-              iconSize: 30,
-            ),
+        Container(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              // Text Input Button
+              _buildCircularButton(
+                onPressed: _showTextInput,
+                backgroundColor: Colors.grey[800]!,
+                icon: Icons.keyboard,
+                iconColor: Colors.white,
+              ),
+              // Microphone Button
+              Transform.scale(
+                scale: 1.2,
+                child: _buildCircularButton(
+                  onPressed: _isListening ? _stopListening : _startListening,
+                  backgroundColor: _isListening ? Colors.red : Color(0xFFC6F432),
+                  icon: Icons.mic,
+                  iconColor: Colors.black,
+                  iconSize: 30,
+                ),
+              ),
+              // Timer Button
+              _buildCircularButton(
+                onPressed: () {
+                  // Implement timer functionality if needed
+                },
+                backgroundColor: Colors.grey[800]!,
+                icon: Icons.timer,
+                iconColor: Colors.white,
+              ),
+            ],
           ),
-          // Timer Button
-          _buildCircularButton(
-            onPressed: () {
-              // Implement timer functionality if needed
-            },
-            backgroundColor: Colors.grey[800]!,
-            icon: Icons.timer,
-            iconColor: Colors.white,
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -343,6 +355,7 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
         });
         _scrollToBottom();
         _showNewSentenceIndicator();
+        _startTimer(); // Start the timer after receiving a new sentence
       } else {
         _logger.w('Unexpected response format: $response');
         setState(() {
@@ -366,7 +379,71 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
     }
   }
 
+  void _startTimer() {
+    if (_selectedTimer != 'No Timer') {
+      _remainingTime = int.parse(_selectedTimer);
+      _timer?.cancel(); // Cancel any existing timer
+      _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+        setState(() {
+          if (_remainingTime > 0) {
+            _remainingTime--;
+          } else {
+            _timer?.cancel();
+            _handleTimeUp();
+          }
+        });
+      });
+    }
+  }
+
+  void _handleTimeUp() async {
+    try {
+      final Map<String, dynamic> response = await _apiService.timeUp(_gameSessionId);
+      _logger.i('Time up response: $response');
+
+      setState(() {
+        _chatMessages.add(ChatMessage(
+          text: 'Time\'s up!',
+          isSystem: true,
+          isError: false,
+        ));
+
+        if (response['correctTranslation'] != null) {
+          _chatMessages.add(ChatMessage(
+            text: 'Correct translation: ${response['correctTranslation']}',
+            isSystem: true,
+            isError: false,
+          ));
+        }
+
+        if (response['score'] != null) {
+          _score = response['score'];
+        }
+      });
+      _scrollToBottom();
+
+      // Add a slight delay before getting the next sentence
+      Future.delayed(Duration(seconds: 2), () {
+        _getNextSentence();
+      });
+    } catch (e) {
+      _logger.e('Error handling time up: $e');
+      setState(() {
+        _chatMessages.add(ChatMessage(
+          text: 'Error: Unable to get the correct translation.',
+          isSystem: true,
+          isError: true,
+        ));
+      });
+      // Even if there's an error, try to get the next sentence
+      Future.delayed(Duration(seconds: 2), () {
+        _getNextSentence();
+      });
+    }
+  }
+
   void _submitTranslation(String translation) async {
+    _timer?.cancel(); // Cancel the timer when a translation is submitted
     _logger.i('Submitting translation: $translation');
     setState(() {
       _isLoading = true;
@@ -578,5 +655,11 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
         _showIndicator = false;
       });
     });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 }

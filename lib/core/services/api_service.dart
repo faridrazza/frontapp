@@ -226,7 +226,7 @@ class ApiService {
     }
   }
 
-  Future<void> timeUp(String gameSessionId) async {
+  Future<Map<String, dynamic>> timeUp(String gameSessionId) async {
     try {
       final token = await _storage.read(key: 'auth_token');
       final response = await _dio.post(
@@ -235,7 +235,9 @@ class ApiService {
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
-      if (response.statusCode != 200) {
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
         throw Exception('Failed to handle time up');
       }
     } catch (e) {
