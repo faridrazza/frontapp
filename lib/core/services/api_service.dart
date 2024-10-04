@@ -201,6 +201,7 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> submitTranslation(String gameSessionId, String translation, int timeTaken) async {
+    _logger.i('Submitting translation: gameSessionId=$gameSessionId, translation=$translation, timeTaken=$timeTaken');
     try {
       final token = await _storage.read(key: 'auth_token');
       final response = await _dio.post(
@@ -212,13 +213,15 @@ class ApiService {
         },
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-
+      _logger.d('API response: ${response.data}');
       if (response.statusCode == 200) {
         return response.data;
       } else {
+        _logger.e('Failed to submit translation: ${response.statusCode}');
         throw Exception('Failed to submit translation');
       }
     } catch (e) {
+      _logger.e('Error submitting translation: $e');
       throw Exception('Error submitting translation: $e');
     }
   }

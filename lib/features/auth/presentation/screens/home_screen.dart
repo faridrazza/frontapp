@@ -176,7 +176,11 @@ class _HomeScreenState extends State<HomeScreen> {
         } else if (label == 'Rapid Sentence') {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => RapidTranslationGameScreen()),
+            MaterialPageRoute(
+              builder: (context) => RapidTranslationGameScreen(
+                targetLanguage: 'en-US', // Replace with the appropriate language code
+              ),
+            ),
           );
         }
         // Add other feature navigations here when implemented

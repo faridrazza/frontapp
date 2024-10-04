@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:frontapp/core/services/api_service.dart';
@@ -8,9 +9,13 @@ import 'package:frontapp/features/rapid_translation/presentation/widgets/timer_b
 import 'package:frontapp/features/rapid_translation/presentation/widgets/difficulty_button.dart';
 import 'package:frontapp/features/rapid_translation/domain/models/chat_message.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:logger/logger.dart';
 
 class RapidTranslationGameScreen extends StatefulWidget {
-  const RapidTranslationGameScreen({Key? key}) : super(key: key);
+  final String targetLanguage;
+
+  const RapidTranslationGameScreen({Key? key, required this.targetLanguage}) : super(key: key);
 
   @override
   _RapidTranslationGameScreenState createState() => _RapidTranslationGameScreenState();
@@ -19,6 +24,7 @@ class RapidTranslationGameScreen extends StatefulWidget {
 class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen> {
   final ApiService _apiService = ApiService();
   final stt.SpeechToText _speech = stt.SpeechToText();
+  final Logger _logger = Logger();
   bool _isListening = false;
   String _text = '';
   String _selectedTimer = '';
@@ -29,22 +35,22 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   List<ChatMessage> _chatMessages = [];
   TextEditingController _textController = TextEditingController();
   ScrollController _scrollController = ScrollController();
+  bool _isLoading = false;
+  bool _showIndicator = false;
 
   @override
   void initState() {
     super.initState();
-    _initializeSpeech();
+    _initializeSpeechRecognition();
   }
 
-  void _initializeSpeech() async {
+  void _initializeSpeechRecognition() async {
     bool available = await _speech.initialize(
-      onStatus: (status) => print('Speech recognition status: $status'),
-      onError: (errorNotification) => print('Speech recognition error: $errorNotification'),
+      onStatus: (status) => _logger.i('Speech recognition status: $status'),
+      onError: (errorNotification) => _logger.e('Speech recognition error: $errorNotification'),
     );
-    if (available) {
-      print('Speech recognition initialized successfully');
-    } else {
-      print('Speech recognition not available');
+    if (!available) {
+      _logger.e('Speech recognition not available');
     }
   }
 
@@ -208,29 +214,41 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
       controller: _scrollController,
       itemCount: _chatMessages.length,
       itemBuilder: (context, index) {
-        return ChatBubble(message: _chatMessages[index]);
+        final message = _chatMessages[index];
+        _logger.i('Building chat message: ${message.text}');
+        return ChatBubble(
+          message: message,
+          onNextSentence: message.isButton ? _getNextSentence : null,
+        );
       },
     );
   }
 
   Widget _buildBottomActions() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          IconButton(
-            icon: Icon(Icons.keyboard, color: Color(0xFFA460F3)),
-            onPressed: _showTextInput,
+          Expanded(
+            child: TextField(
+              controller: _textController,
+              decoration: InputDecoration(
+                hintText: 'Type your translation...',
+                border: OutlineInputBorder(),
+              ),
+              onSubmitted: (value) {
+                if (value.isNotEmpty) {
+                  _submitTranslation(value);
+                  _textController.clear();
+                }
+              },
+            ),
           ),
-          FloatingActionButton(
+          SizedBox(width: 8),
+          IconButton(
+            icon: Icon(_isListening ? Icons.mic_off : Icons.mic),
+            color: _isListening ? Colors.red : Colors.blue,
             onPressed: _isListening ? _stopListening : _startListening,
-            child: Icon(_isListening ? Icons.mic_off : Icons.mic, color: Colors.black),
-            backgroundColor: Color(0xFFC6F432),
-          ),
-          IconButton(
-            icon: Icon(Icons.timer, color: Colors.grey),
-            onPressed: () {}, // Timer functionality
           ),
         ],
       ),
@@ -267,43 +285,110 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   }
 
   void _getNextSentence() async {
+    _logger.i('Getting next sentence');
     try {
-      final result = await _apiService.getNextSentence(_gameSessionId);
+      final response = await _apiService.getNextSentence(_gameSessionId);
+      _logger.i('Received next sentence response: $response');
+
+      if (response is Map<String, dynamic>) {
+        final String nextSentence = response['sentence'] ?? 'No sentence provided';
+        final String sourceLanguage = response['sourceLanguage'] ?? 'Unknown';
+        
+        _logger.i('Next sentence: $nextSentence');
+        _logger.i('Source language: $sourceLanguage');
+
+        setState(() {
+          _chatMessages.add(ChatMessage(
+            text: 'Translate from $sourceLanguage:\n$nextSentence',
+            isSystem: true,
+            isError: false,
+          ));
+        });
+        _scrollToBottom();
+        _showNewSentenceIndicator();
+      } else {
+        _logger.w('Unexpected response format: $response');
+        setState(() {
+          _chatMessages.add(ChatMessage(
+            text: 'Unexpected response format. Please try again.',
+            isSystem: true,
+            isError: true,
+          ));
+        });
+      }
+    } catch (e) {
+      _logger.e('Error getting next sentence: $e');
       setState(() {
         _chatMessages.add(ChatMessage(
-          text: result['sentence'],
+          text: 'Error getting next sentence. Please try again.',
           isSystem: true,
+          isError: true,
         ));
       });
       _scrollToBottom();
-    } catch (e) {
-      // Handle error
     }
   }
 
   void _submitTranslation(String translation) async {
+    _logger.i('Submitting translation: $translation');
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
-      final result = await _apiService.submitTranslation(_gameSessionId, translation, 0); // Replace 0 with actual time taken
+      final int timeTaken = _calculateTimeTaken(); // Implement this method
+      final response = await _apiService.submitTranslation(
+        _gameSessionId,
+        translation,
+        timeTaken,
+      );
+      _logger.i('Raw response from backend: $response');
+
+      if (response is Map<String, dynamic>) {
+        _logger.i('isCorrect: ${response['isCorrect']}');
+        _logger.i('correctTranslation: ${response['correctTranslation']}');
+
+        final bool isCorrect = response['isCorrect'] ?? false;
+        final String? correctTranslation = response['correctTranslation'];
+
+        setState(() {
+          _chatMessages.add(ChatMessage(
+            text: isCorrect 
+                ? 'Correct translation!'
+                : 'Incorrect. The correct translation is: $correctTranslation',
+            isSystem: true,
+            isError: false,
+            isCorrect: isCorrect,
+          ));
+          // Update score or other game state if needed
+          _isLoading = false;
+        });
+      } else {
+        _logger.w('Unexpected response format: $response');
+        setState(() {
+          _chatMessages.add(ChatMessage(
+            text: 'Unexpected response from server.',
+            isSystem: true,
+            isError: true,
+          ));
+          _isLoading = false;
+        });
+      }
+
+      _scrollToBottom();
+      _logger.i('Calling _getNextSentence after submitting translation');
+      _getNextSentence();
+    } catch (e) {
+      _logger.e('Error submitting translation: $e');
       setState(() {
         _chatMessages.add(ChatMessage(
-          text: translation,
+          text: 'Error submitting translation. Please try again.',
           isSystem: false,
-          isCorrect: result['isCorrect'],
+          isError: true,
         ));
-        if (!result['isCorrect']) {
-          _chatMessages.add(ChatMessage(
-            text: result['correctTranslation'],
-            isSystem: true,
-            isCorrect: true,
-          ));
-        }
-        _score = result['score'];
+        _isLoading = false;
       });
       _scrollToBottom();
-      _showNextSentenceButton();
-    } catch (e) {
-      print('Error submitting translation: $e');
-      // Handle error (e.g., show an error message to the user)
     }
   }
 
@@ -317,20 +402,16 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   }
 
   void _startListening() async {
+    _logger.i('Starting speech recognition');
     if (!_isListening) {
-      bool available = await _speech.initialize();
-      if (available) {
+      if (await _speech.initialize()) {
         setState(() => _isListening = true);
         _speech.listen(
-          onResult: (result) {
-            setState(() {
-              _text = result.recognizedWords;
-            });
-          },
+          onResult: _onSpeechResult,
           listenFor: Duration(seconds: 30),
           pauseFor: Duration(seconds: 5),
-          partialResults: false,
-          onSoundLevelChange: (level) => print('Sound level: $level'),
+          partialResults: true,
+          localeId: widget.targetLanguage,
           cancelOnError: true,
           listenMode: stt.ListenMode.confirmation,
         );
@@ -338,12 +419,25 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
     }
   }
 
-  void _stopListening() {
-    _speech.stop();
+  void _stopListening() async {
+    _logger.i('Stopping speech recognition');
+    await _speech.stop();
     setState(() => _isListening = false);
+    
     if (_text.isNotEmpty) {
+      _logger.i('Submitting recognized text: $_text');
       _submitTranslation(_text);
-      _text = '';
+      setState(() {
+        _chatMessages.add(ChatMessage(
+          text: _text,
+          isSystem: false,
+          isError: false,
+        ));
+      });
+      _scrollToBottom();
+      _text = ''; // Clear the text after submitting
+    } else {
+      _logger.w('No text recognized');
     }
   }
 
@@ -379,11 +473,15 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   }
 
   void _scrollToBottom() {
-    _scrollController.animateTo(
-      _scrollController.position.maxScrollExtent,
-      duration: Duration(milliseconds: 300),
-      curve: Curves.easeOut,
-    );
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   void _showNextSentenceButton() {
@@ -395,5 +493,29 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
       ));
     });
     _scrollToBottom();
+  }
+
+  // Implement this method to calculate the time taken for the translation
+  int _calculateTimeTaken() {
+    // This is a placeholder implementation. Replace with your actual logic.
+    return 0; // Return the time taken in seconds or milliseconds
+  }
+
+  void _onSpeechResult(SpeechRecognitionResult result) {
+    setState(() {
+      _text = result.recognizedWords;
+      _logger.i('Recognized words: $_text');
+    });
+  }
+
+  void _showNewSentenceIndicator() {
+    setState(() {
+      _showIndicator = true;
+    });
+    Future.delayed(Duration(milliseconds: 500), () {
+      setState(() {
+        _showIndicator = false;
+      });
+    });
   }
 }
