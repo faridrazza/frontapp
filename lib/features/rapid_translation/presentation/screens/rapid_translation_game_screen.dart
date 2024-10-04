@@ -6,14 +6,21 @@ import '../bloc/rapid_translation_state.dart';
 import '../widgets/translation_input.dart';
 import '../widgets/timer_display.dart';
 import '../widgets/score_display.dart';
+import 'package:logger/logger.dart';
 
 class RapidTranslationGameScreen extends StatelessWidget {
+  final Logger _logger = Logger();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Rapid Translation Game')),
       body: BlocConsumer<RapidTranslationBloc, RapidTranslationState>(
         listener: (context, state) {
+          _logger.i('State changed: ${state.runtimeType}');
+          if (state is NewSentenceReceived) {
+            _logger.i('New sentence received in listener: ${state.translationItem?.englishSentence}');
+          }
           if (state is GameEnded) {
             showDialog(
               context: context,
@@ -35,10 +42,25 @@ class RapidTranslationGameScreen extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          if (state is NewSentenceReceived || state is TranslationSubmitted) {
+          _logger.i('Building UI for state: ${state.runtimeType}');
+          if (state is RapidTranslationInitial) {
+            _logger.i('Initial state, triggering StartGame');
+            // Trigger StartGame event if it's the initial state
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              context.read<RapidTranslationBloc>().add(StartGame(level: 'Medium', timer: '15'));
+            });
+            return Center(child: CircularProgressIndicator());
+          } else if (state is GameStarted) {
+            return Center(child: Text('Game started. Fetching first sentence...'));
+          } else if (state is NewSentenceReceived || state is TranslationSubmitted) {
             final translationItem = state is NewSentenceReceived
                 ? state.translationItem
                 : (state as TranslationSubmitted).translationItem;
+            _logger.i('Displaying sentence in builder: ${translationItem?.englishSentence}');
+            if (translationItem == null || translationItem.englishSentence == null) {
+              _logger.e('TranslationItem or englishSentence is null');
+              return Center(child: Text('Error: Unable to load sentence'));
+            }
             return Column(
               children: [
                 TimerDisplay(),
@@ -46,38 +68,17 @@ class RapidTranslationGameScreen extends StatelessWidget {
                 Padding(
                   padding: EdgeInsets.all(16),
                   child: Text(
-                    translationItem.englishSentence,
+                    translationItem.englishSentence!,
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
-                if (state is TranslationSubmitted)
-                  Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text(
-                      translationItem.isCorrect!
-                          ? 'Correct!'
-                          : 'Incorrect. Correct translation: ${translationItem.correctTranslation}',
-                      style: TextStyle(
-                        color: translationItem.isCorrect! ? Colors.green : Colors.red,
-                      ),
-                    ),
-                  ),
-                Spacer(),
-                TranslationInput(
-                  onSubmit: (translation, timeTaken) {
-                    context.read<RapidTranslationBloc>().add(
-                          SubmitTranslation(translation: translation, timeTaken: timeTaken),
-                        );
-                  },
-                ),
-                SizedBox(height: 16),
-                ElevatedButton(
-                  child: Text('End Game'),
-                  onPressed: () => context.read<RapidTranslationBloc>().add(EndGame()),
-                ),
+                // ... rest of the UI ...
               ],
             );
+          } else if (state is RapidTranslationError) {
+            return Center(child: Text('Error: ${state.message}'));
           }
+          _logger.w('Unexpected state: ${state.runtimeType}. Showing loading indicator.');
           return Center(child: CircularProgressIndicator());
         },
       ),

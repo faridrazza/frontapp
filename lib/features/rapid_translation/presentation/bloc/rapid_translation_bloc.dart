@@ -2,9 +2,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/repositories/rapid_translation_repository.dart';
 import 'rapid_translation_event.dart';
 import 'rapid_translation_state.dart';
+import 'package:logger/logger.dart';
 
 class RapidTranslationBloc extends Bloc<RapidTranslationEvent, RapidTranslationState> {
   final RapidTranslationRepository repository;
+  final Logger _logger = Logger();
   String? gameSessionId;
   int score = 0;
 
@@ -18,20 +20,38 @@ class RapidTranslationBloc extends Bloc<RapidTranslationEvent, RapidTranslationS
 
   void _onStartGame(StartGame event, Emitter<RapidTranslationState> emit) async {
     try {
+      _logger.i('Starting game with level: ${event.level}, timer: ${event.timer}');
       final gameSession = await repository.startGame(event.level, event.timer);
       gameSessionId = gameSession.id;
       emit(GameStarted(gameSession));
+      _logger.i('Game started. Fetching first sentence.');
       add(GetNextSentence());
     } catch (e) {
+      _logger.e('Error starting game: $e');
       emit(RapidTranslationError(e.toString()));
     }
   }
 
   void _onGetNextSentence(GetNextSentence event, Emitter<RapidTranslationState> emit) async {
+    if (gameSessionId == null) {
+      _logger.e('Attempted to get next sentence without starting the game');
+      emit(RapidTranslationError('Game not started. Please start the game first.'));
+      return;
+    }
+
     try {
+      _logger.i('Getting next sentence for gameSessionId: $gameSessionId');
       final translationItem = await repository.getNextSentence(gameSessionId!);
-      emit(NewSentenceReceived(translationItem));
+      _logger.i('Received translation item: $translationItem');
+      if (translationItem.englishSentence.isEmpty) {
+        _logger.e('Received empty sentence');
+        emit(RapidTranslationError('Received empty sentence from server'));
+      } else {
+        emit(NewSentenceReceived(translationItem));
+        _logger.i('Emitted NewSentenceReceived state');
+      }
     } catch (e) {
+      _logger.e('Error getting next sentence: $e');
       emit(RapidTranslationError(e.toString()));
     }
   }

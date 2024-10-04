@@ -11,11 +11,11 @@ class GameSetupScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Rapid Translation Game Setup')),
-      body: BlocListener<RapidTranslationBloc, RapidTranslationState>(
+      body: BlocConsumer<RapidTranslationBloc, RapidTranslationState>(
         listener: (context, state) {
           if (state is GameStarted) {
-            Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => RapidTranslationGameScreen(),
+            Navigator.of(context).pushReplacement(MaterialPageRoute(
+              builder: (context) => RapidTranslationGameScreen(),
             ));
           } else if (state is RapidTranslationError) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -23,11 +23,13 @@ class GameSetupScreen extends StatelessWidget {
             );
           }
         },
-        child: GameSetupForm(
-          onSubmit: (level, timer) {
-            context.read<RapidTranslationBloc>().add(StartGame(level: level, timer: timer));
-          },
-        ),
+        builder: (context, state) {
+          return GameSetupForm(
+            onSubmit: (level, timer) {
+              context.read<RapidTranslationBloc>().add(StartGame(level: level, timer: timer));
+            },
+          );
+        },
       ),
     );
   }

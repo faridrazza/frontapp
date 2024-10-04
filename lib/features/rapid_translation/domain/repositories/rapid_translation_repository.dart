@@ -1,9 +1,11 @@
 import '../../../../core/services/api_service.dart';
 import '../models/game_session.dart';
 import '../models/translation_item.dart';
+import 'package:logger/logger.dart';
 
 class RapidTranslationRepository {
   final ApiService _apiService;
+  final Logger _logger = Logger();
 
   RapidTranslationRepository(this._apiService);
 
@@ -13,8 +15,15 @@ class RapidTranslationRepository {
   }
 
   Future<TranslationItem> getNextSentence(String gameSessionId) async {
-    final data = await _apiService.getNextSentence(gameSessionId);
-    return TranslationItem(englishSentence: data['sentence']);
+    try {
+      _logger.i('Fetching next sentence from repository for gameSessionId: $gameSessionId');
+      final data = await _apiService.getNextSentence(gameSessionId);
+      _logger.i('Received data from API: $data');
+      return TranslationItem(englishSentence: data['sentence']);
+    } catch (e) {
+      _logger.e('Failed to get next sentence: $e');
+      throw Exception('Failed to get next sentence: $e');
+    }
   }
 
   Future<TranslationItem> submitTranslation(String gameSessionId, String translation, int timeTaken) async {

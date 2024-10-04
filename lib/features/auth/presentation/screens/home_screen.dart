@@ -10,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:frontapp/features/rapid_translation/presentation/bloc/rapid_translation_bloc.dart';
 import 'package:frontapp/features/rapid_translation/presentation/screens/game_setup_screen.dart';
 import 'package:frontapp/features/rapid_translation/domain/repositories/rapid_translation_repository.dart';
+import 'package:frontapp/features/rapid_translation/presentation/widgets/rapid_translation_wrapper.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isNewUser;
@@ -178,12 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => BlocProvider(
-                create: (context) => RapidTranslationBloc(
-                  RapidTranslationRepository(ApiService()),
-                ),
-                child: GameSetupScreen(),
-              ),
+              builder: (context) => RapidTranslationWrapper(),
             ),
           );
         }

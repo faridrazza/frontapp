@@ -2,10 +2,12 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:logger/logger.dart';
 
 class ApiService {
   final Dio _dio = Dio();
   final FlutterSecureStorage _storage = FlutterSecureStorage();
+  final Logger _logger = Logger();
 
   // Use this for local development
   static const String _baseUrlDev = 'http://192.168.0.104:5000'; // Replace with your computer's IP
@@ -178,18 +180,22 @@ class ApiService {
   Future<Map<String, dynamic>> getNextSentence(String gameSessionId) async {
     try {
       final token = await _storage.read(key: 'auth_token');
+      _logger.i('Fetching next sentence for gameSessionId: $gameSessionId');
       final response = await _dio.post(
-        '$_baseUrl/api/rapid-translation/get-next-sentence',
+        '$_baseUrl/api/ai/get-next-sentence',
         data: {'gameSessionId': gameSessionId},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
       if (response.statusCode == 200) {
+        _logger.i('Received next sentence: ${response.data}');
         return response.data;
       } else {
+        _logger.e('Failed to get next sentence. Status code: ${response.statusCode}');
         throw Exception('Failed to get next sentence');
       }
     } catch (e) {
+      _logger.e('Error getting next sentence: $e');
       throw Exception('Error getting next sentence: $e');
     }
   }
@@ -198,7 +204,7 @@ class ApiService {
     try {
       final token = await _storage.read(key: 'auth_token');
       final response = await _dio.post(
-        '$_baseUrl/api/rapid-translation/submit-translation',
+        '$_baseUrl/api/ai/submit-translation',
         data: {
           'gameSessionId': gameSessionId,
           'translation': translation,
@@ -221,7 +227,7 @@ class ApiService {
     try {
       final token = await _storage.read(key: 'auth_token');
       final response = await _dio.post(
-        '$_baseUrl/api/rapid-translation/time-up',
+        '$_baseUrl/api/ai/time-up',
         data: {'gameSessionId': gameSessionId},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
@@ -238,7 +244,7 @@ class ApiService {
     try {
       final token = await _storage.read(key: 'auth_token');
       final response = await _dio.post(
-        '$_baseUrl/api/rapid-translation/end-translation-game',
+        '$_baseUrl/api/ai/end-translation-game',
         data: {'gameSessionId': gameSessionId},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );

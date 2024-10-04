@@ -10,4 +10,9 @@ class TranslationItem {
     this.correctTranslation,
     this.isCorrect,
   });
+
+  @override
+  String toString() {
+    return 'TranslationItem(englishSentence: $englishSentence, userTranslation: $userTranslation, correctTranslation: $correctTranslation, isCorrect: $isCorrect)';
+  }
 }
