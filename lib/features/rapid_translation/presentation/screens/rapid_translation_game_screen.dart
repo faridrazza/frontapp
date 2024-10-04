@@ -226,34 +226,71 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
 
   Widget _buildBottomActions() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(vertical: 20),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Expanded(
-            child: TextField(
-              controller: _textController,
-              decoration: InputDecoration(
-                hintText: 'Type your translation...',
-                border: OutlineInputBorder(),
-              ),
-              onSubmitted: (value) {
-                if (value.isNotEmpty) {
-                  _submitTranslation(value);
-                  _textController.clear();
-                }
-              },
+          // Text Input Button
+          _buildCircularButton(
+            onPressed: _showTextInput,
+            backgroundColor: Colors.grey[800]!,
+            icon: Icons.keyboard,
+            iconColor: Colors.white,
+          ),
+          // Microphone Button
+          Transform.scale(
+            scale: 1.2,
+            child: _buildCircularButton(
+              onPressed: _isListening ? _stopListening : _startListening,
+              backgroundColor: Color(0xFFC6F432),
+              icon: _isListening ? Icons.mic_off : Icons.mic,
+              iconColor: Colors.black,
+              iconSize: 30,
             ),
           ),
-          SizedBox(width: 8),
-          IconButton(
-            icon: Icon(_isListening ? Icons.mic_off : Icons.mic),
-            color: _isListening ? Colors.red : Colors.blue,
-            onPressed: _isListening ? _stopListening : _startListening,
+          // Timer Button
+          _buildCircularButton(
+            onPressed: () {
+              // Implement timer functionality if needed
+            },
+            backgroundColor: Colors.grey[800]!,
+            icon: Icons.timer,
+            iconColor: Colors.white,
           ),
         ],
       ),
     );
   }
+
+  Widget _buildCircularButton({
+    required VoidCallback onPressed,
+    required Color backgroundColor,
+    required IconData icon,
+    required Color iconColor,
+    double iconSize = 24,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: backgroundColor,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: CircleBorder(),
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Icon(
+              icon,
+              color: iconColor,
+              size: iconSize,
+            ),
+          ),
+        ),
+      ),
+    );
+  } 
 
   void _selectTimer(String timer) {
     setState(() {
@@ -444,26 +481,50 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   void _showTextInput() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (BuildContext context) {
         return Padding(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 16,
+            right: 16,
+            top: 16,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: _textController,
                 decoration: InputDecoration(
-                  hintText: 'Type your translation here',
+                  hintText: 'Type your translation...',
+                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Colors.black,
                 ),
+                autofocus: true,
               ),
               SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {
-                  _submitTranslation(_textController.text);
-                  Navigator.pop(context);
-                  _textController.clear();
+                  if (_textController.text.isNotEmpty) {
+                    setState(() {
+                      _chatMessages.add(ChatMessage(
+                        text: _textController.text,
+                        isSystem: false,
+                        isError: false,
+                      ));
+                    });
+                    _submitTranslation(_textController.text);
+                    Navigator.pop(context);
+                    _textController.clear();
+                    _scrollToBottom();
+                  }
                 },
                 child: Text('Submit'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFFC6F432),
+                  foregroundColor: Colors.black,
+                ),
               ),
             ],
           ),
