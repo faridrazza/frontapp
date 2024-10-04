@@ -348,7 +348,7 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
 
         setState(() {
           _chatMessages.add(ChatMessage(
-            text: 'Translate from $sourceLanguage:\n$nextSentence',
+            text: nextSentence,
             isSystem: true,
             isError: false,
           ));
