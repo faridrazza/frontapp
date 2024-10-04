@@ -8,9 +8,7 @@ import 'package:frontapp/features/speak_with_ai/domain/repositories/speak_with_a
 import 'package:frontapp/core/services/websocket_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:frontapp/features/rapid_translation/presentation/bloc/rapid_translation_bloc.dart';
-import 'package:frontapp/features/rapid_translation/presentation/screens/game_setup_screen.dart';
-import 'package:frontapp/features/rapid_translation/domain/repositories/rapid_translation_repository.dart';
-import 'package:frontapp/features/rapid_translation/presentation/widgets/rapid_translation_wrapper.dart';
+import 'package:frontapp/features/rapid_translation/presentation/screens/rapid_translation_game_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isNewUser;
@@ -178,9 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
         } else if (label == 'Rapid Sentence') {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => RapidTranslationWrapper(),
-            ),
+            MaterialPageRoute(builder: (context) => RapidTranslationGameScreen()),
           );
         }
         // Add other feature navigations here when implemented

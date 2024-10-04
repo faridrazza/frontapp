@@ -1,89 +1,151 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../domain/repositories/rapid_translation_repository.dart';
-import 'rapid_translation_event.dart';
-import 'rapid_translation_state.dart';
-import 'package:logger/logger.dart';
+import 'package:equatable/equatable.dart';
+import 'package:frontapp/core/services/api_service.dart';
 
+// Events
+abstract class RapidTranslationEvent extends Equatable {
+  const RapidTranslationEvent();
+
+  @override
+  List<Object> get props => [];
+}
+
+class StartGame extends RapidTranslationEvent {
+  final String difficulty;
+  final String timer;
+
+  const StartGame({required this.difficulty, required this.timer});
+
+  @override
+  List<Object> get props => [difficulty, timer];
+}
+
+class SubmitTranslation extends RapidTranslationEvent {
+  final String translation;
+  final int timeTaken;
+
+  const SubmitTranslation({required this.translation, required this.timeTaken});
+
+  @override
+  List<Object> get props => [translation, timeTaken];
+}
+
+class GetNextSentence extends RapidTranslationEvent {}
+
+class EndGame extends RapidTranslationEvent {}
+
+// States
+abstract class RapidTranslationState extends Equatable {
+  const RapidTranslationState();
+  
+  @override
+  List<Object> get props => [];
+}
+
+class RapidTranslationInitial extends RapidTranslationState {}
+
+class GameStarted extends RapidTranslationState {
+  final String gameSessionId;
+  final String sentence;
+
+  const GameStarted({required this.gameSessionId, required this.sentence});
+
+  @override
+  List<Object> get props => [gameSessionId, sentence];
+}
+
+class TranslationSubmitted extends RapidTranslationState {
+  final bool isCorrect;
+  final String correctTranslation;
+  final int score;
+
+  const TranslationSubmitted({
+    required this.isCorrect,
+    required this.correctTranslation,
+    required this.score,
+  });
+
+  @override
+  List<Object> get props => [isCorrect, correctTranslation, score];
+}
+
+class NewSentenceReceived extends RapidTranslationState {
+  final String sentence;
+
+  const NewSentenceReceived({required this.sentence});
+
+  @override
+  List<Object> get props => [sentence];
+}
+
+class GameEnded extends RapidTranslationState {
+  final int finalScore;
+
+  const GameEnded({required this.finalScore});
+
+  @override
+  List<Object> get props => [finalScore];
+}
+
+class RapidTranslationError extends RapidTranslationState {
+  final String message;
+
+  const RapidTranslationError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+// Bloc
 class RapidTranslationBloc extends Bloc<RapidTranslationEvent, RapidTranslationState> {
-  final RapidTranslationRepository repository;
-  final Logger _logger = Logger();
-  String? gameSessionId;
-  int score = 0;
+  final ApiService _apiService;
+  String _gameSessionId = '';
 
-  RapidTranslationBloc(this.repository) : super(RapidTranslationInitial()) {
+  RapidTranslationBloc(this._apiService) : super(RapidTranslationInitial()) {
     on<StartGame>(_onStartGame);
-    on<GetNextSentence>(_onGetNextSentence);
     on<SubmitTranslation>(_onSubmitTranslation);
-    on<TimeUp>(_onTimeUp);
+    on<GetNextSentence>(_onGetNextSentence);
     on<EndGame>(_onEndGame);
   }
 
-  void _onStartGame(StartGame event, Emitter<RapidTranslationState> emit) async {
+  Future<void> _onStartGame(StartGame event, Emitter<RapidTranslationState> emit) async {
     try {
-      _logger.i('Starting game with level: ${event.level}, timer: ${event.timer}');
-      final gameSession = await repository.startGame(event.level, event.timer);
-      gameSessionId = gameSession.id;
-      emit(GameStarted(gameSession));
-      _logger.i('Game started. Fetching first sentence.');
-      add(GetNextSentence());
+      final result = await _apiService.startTranslationGame(event.difficulty, event.timer);
+      _gameSessionId = result['gameSessionId'];
+      emit(GameStarted(gameSessionId: _gameSessionId, sentence: result['initialSentence']));
     } catch (e) {
-      _logger.e('Error starting game: $e');
-      emit(RapidTranslationError(e.toString()));
+      emit(RapidTranslationError(message: 'Failed to start game: $e'));
     }
   }
 
-  void _onGetNextSentence(GetNextSentence event, Emitter<RapidTranslationState> emit) async {
-    if (gameSessionId == null) {
-      _logger.e('Attempted to get next sentence without starting the game');
-      emit(RapidTranslationError('Game not started. Please start the game first.'));
-      return;
-    }
-
+  Future<void> _onSubmitTranslation(SubmitTranslation event, Emitter<RapidTranslationState> emit) async {
     try {
-      _logger.i('Getting next sentence for gameSessionId: $gameSessionId');
-      final translationItem = await repository.getNextSentence(gameSessionId!);
-      _logger.i('Received translation item: $translationItem');
-      if (translationItem.englishSentence.isEmpty) {
-        _logger.e('Received empty sentence');
-        emit(RapidTranslationError('Received empty sentence from server'));
-      } else {
-        emit(NewSentenceReceived(translationItem));
-        _logger.i('Emitted NewSentenceReceived state');
-      }
+      final result = await _apiService.submitTranslation(_gameSessionId, event.translation, event.timeTaken);
+      emit(TranslationSubmitted(
+        isCorrect: result['isCorrect'],
+        correctTranslation: result['correctTranslation'],
+        score: result['score'],
+      ));
     } catch (e) {
-      _logger.e('Error getting next sentence: $e');
-      emit(RapidTranslationError(e.toString()));
+      emit(RapidTranslationError(message: 'Failed to submit translation: $e'));
     }
   }
 
-  void _onSubmitTranslation(SubmitTranslation event, Emitter<RapidTranslationState> emit) async {
+  Future<void> _onGetNextSentence(GetNextSentence event, Emitter<RapidTranslationState> emit) async {
     try {
-      final result = await repository.submitTranslation(gameSessionId!, event.translation, event.timeTaken);
-      if (result.isCorrect!) {
-        score++;
-      }
-      emit(TranslationSubmitted(result));
-      add(GetNextSentence());
+      final result = await _apiService.getNextSentence(_gameSessionId);
+      emit(NewSentenceReceived(sentence: result['sentence']));
     } catch (e) {
-      emit(RapidTranslationError(e.toString()));
+      emit(RapidTranslationError(message: 'Failed to get next sentence: $e'));
     }
   }
 
-  void _onTimeUp(TimeUp event, Emitter<RapidTranslationState> emit) async {
+  Future<void> _onEndGame(EndGame event, Emitter<RapidTranslationState> emit) async {
     try {
-      await repository.timeUp(gameSessionId!);
-      add(GetNextSentence());
+      final result = await _apiService.endTranslationGame(_gameSessionId);
+      emit(GameEnded(finalScore: result['finalScore']));
     } catch (e) {
-      emit(RapidTranslationError(e.toString()));
-    }
-  }
-
-  void _onEndGame(EndGame event, Emitter<RapidTranslationState> emit) async {
-    try {
-      final result = await repository.endGame(gameSessionId!);
-      emit(GameEnded(finalScore: score, feedback: result['feedback']));
-    } catch (e) {
-      emit(RapidTranslationError(e.toString()));
+      emit(RapidTranslationError(message: 'Failed to end game: $e'));
     }
   }
 }
