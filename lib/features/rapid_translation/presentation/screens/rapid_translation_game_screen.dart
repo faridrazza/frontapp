@@ -77,7 +77,8 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      // padding: const EdgeInsets.all(6.0),
+      padding: const EdgeInsets.symmetric(horizontal: 30,vertical: 5),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -125,7 +126,7 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
             
             // Timer Selection Options
             Text(
-              'Timer Selection Options',
+              'Select Timer',
               style: GoogleFonts.inter(
                 color: Colors.white,
                 fontSize: 18,
@@ -168,7 +169,7 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
             ),
             SizedBox(height: 32),
             Text(
-              'Difficulty Level Selection',
+              'Select Difficulty Level',
               style: GoogleFonts.inter(
                 color: Colors.white,
                 fontSize: 18,
