@@ -103,6 +103,27 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Game Instructions
+            Text(
+              'Rapid-Fire Translation Game',
+              style: GoogleFonts.inter(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              "Translate the given sentence into English. Tap the microphone button, speak clearly, and once you've recorded, wait two seconds before turning off the mic.",
+
+              style: GoogleFonts.inter(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+            ),
+            SizedBox(height: 24),
+            
+            // Timer Selection Options
             Text(
               'Timer Selection Options',
               style: GoogleFonts.inter(
