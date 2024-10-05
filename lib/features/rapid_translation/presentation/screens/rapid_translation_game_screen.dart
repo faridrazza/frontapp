@@ -22,7 +22,7 @@ class RapidTranslationGameScreen extends StatefulWidget {
   _RapidTranslationGameScreenState createState() => _RapidTranslationGameScreenState();
 }
 
-class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen> {
+class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen> with WidgetsBindingObserver {
   final ApiService _apiService = ApiService();
   final stt.SpeechToText _speech = stt.SpeechToText();
   final Logger _logger = Logger();
@@ -39,10 +39,13 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   bool _showIndicator = false;
   Timer? _timer;
   int _remainingTime = 0;
+  bool _isPaused = false;
+  int _remainingTimeWhenPaused = 0;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializeSpeechRecognition();
   }
 
@@ -334,6 +337,7 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   }
 
   void _getNextSentence() async {
+    if (_isPaused) return;
     _logger.i('Getting next sentence');
     try {
       final response = await _apiService.getNextSentence(_gameSessionId);
@@ -378,65 +382,75 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   }
 
   void _startTimer() {
-    if (_selectedTimer != 'No Timer') {
-      _remainingTime = int.parse(_selectedTimer);
-      _timer?.cancel(); // Cancel any existing timer
+    if (_selectedTimer != 'No Timer' && !_isPaused) {
+      _timer?.cancel();
+      _remainingTime = int.parse(_selectedTimer); // Set initial time
       _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-        setState(() {
-          if (_remainingTime > 0) {
-            _remainingTime--;
-          } else {
-            _timer?.cancel();
-            _handleTimeUp();
-          }
-        });
+        if (mounted) { // Check if the widget is still in the tree
+          setState(() {
+            if (_remainingTime > 0) {
+              _remainingTime--;
+            } else {
+              _timer?.cancel();
+              _handleTimeUp();
+            }
+          });
+        } else {
+          _timer?.cancel(); // Cancel the timer if the widget is no longer in the tree
+        }
       });
     }
   }
 
   void _handleTimeUp() async {
+    if (!mounted) return; // Check if the widget is still in the tree
     try {
       final Map<String, dynamic> response = await _apiService.timeUp(_gameSessionId);
       _logger.i('Time up response: $response');
 
-      setState(() {
-        _chatMessages.add(ChatMessage(
-          text: 'Time\'s up!',
-          isSystem: true,
-          isError: false,
-        ));
-
-        if (response['correctTranslation'] != null) {
+      if (mounted) { // Check again before calling setState
+        setState(() {
           _chatMessages.add(ChatMessage(
-            text: 'Correct translation: ${response['correctTranslation']}',
+            text: 'Time\'s up!',
             isSystem: true,
             isError: false,
           ));
-        }
-      });
-      _scrollToBottom();
 
-      // Add a slight delay before getting the next sentence
-      Future.delayed(Duration(seconds: 2), () {
-        _getNextSentence();
-      });
+          if (response['correctTranslation'] != null) {
+            _chatMessages.add(ChatMessage(
+              text: 'Correct translation: ${response['correctTranslation']}',
+              isSystem: true,
+              isError: false,
+            ));
+          }
+        });
+        _scrollToBottom();
+
+        // Add a slight delay before getting the next sentence
+        Future.delayed(Duration(seconds: 2), () {
+          if (mounted) _getNextSentence();
+        });
+      }
     } catch (e) {
       _logger.e('Error handling time up: $e');
-      setState(() {
-        _chatMessages.add(ChatMessage(
-          text: 'Error: Unable to get the correct translation.',
-          isSystem: true,
-          isError: true,
-        ));
-      });
-      // Even if there's an error, try to get the next sentence
-      Future.delayed(Duration(seconds: 2), () {
-        _getNextSentence();
-      });
+      if (mounted) {
+        setState(() {
+          _chatMessages.add(ChatMessage(
+            text: 'Error: Unable to get the correct translation.',
+            isSystem: true,
+            isError: true,
+          ));
+        });
+        // Even if there's an error, try to get the next sentence
+        Future.delayed(Duration(seconds: 2), () {
+          if (mounted) _getNextSentence();
+        });
+      }
     }
   }
 
   void _submitTranslation(String translation) async {
+    if (_isPaused) return;
     _timer?.cancel(); // Cancel the timer when a translation is submitted
     _logger.i('Submitting translation: $translation');
     setState(() {
@@ -651,8 +665,38 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
     });
   }
 
+  void _pauseGame() {
+    if (_isGameStarted && !_isPaused) {
+      setState(() {
+        _isPaused = true;
+        _remainingTimeWhenPaused = _remainingTime;
+      });
+      _timer?.cancel();
+    }
+  }
+
+  void _resumeGame() {
+    if (_isGameStarted && _isPaused) {
+      setState(() {
+        _isPaused = false;
+        _remainingTime = _remainingTimeWhenPaused;
+      });
+      _startTimer();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _pauseGame();
+    } else if (state == AppLifecycleState.resumed) {
+      _resumeGame();
+    }
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     super.dispose();
   }
