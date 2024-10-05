@@ -244,15 +244,7 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
                   iconSize: 30,
                 ),
               ),
-              // Timer Button
-              _buildCircularButton(
-                onPressed: () {
-                  // Implement timer functionality if needed
-                },
-                backgroundColor: Colors.grey[800]!,
-                icon: Icons.timer,
-                iconColor: Colors.white,
-              ),
+              // Timer Button removed
             ],
           ),
         ),
