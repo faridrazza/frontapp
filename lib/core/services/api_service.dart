@@ -263,4 +263,27 @@ class ApiService {
       throw Exception('Error ending game: $e');
     }
   }
+
+  Future<Map<String, dynamic>> updateProfile({String? name, String? phoneNumber, String? nativeLanguage}) async {
+    try {
+      final token = await _storage.read(key: 'auth_token');
+      final response = await _dio.put(
+        '$_baseUrl/api/user/profile',
+        data: {
+          if (name != null) 'name': name,
+          if (phoneNumber != null) 'phoneNumber': phoneNumber,
+          if (nativeLanguage != null) 'nativeLanguage': nativeLanguage,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Failed to update profile');
+      }
+    } catch (e) {
+      throw Exception('Error updating profile: $e');
+    }
+  }
 }

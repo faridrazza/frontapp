@@ -9,6 +9,7 @@ import 'package:frontapp/core/services/websocket_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:frontapp/features/rapid_translation/presentation/bloc/rapid_translation_bloc.dart';
 import 'package:frontapp/features/rapid_translation/presentation/screens/rapid_translation_game_screen.dart';
+import 'package:frontapp/core/utils/navigation_utils.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isNewUser;
@@ -74,7 +75,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(Icons.menu, color: Colors.white, size: 24),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(NavigationUtils.createSettingsRoute());
+                        },
+                        child: Icon(Icons.menu, color: Colors.white, size: 24),
+                      ),
                       Text(
                         'Hi, $_userName 👋',
                         style: GoogleFonts.inter(
