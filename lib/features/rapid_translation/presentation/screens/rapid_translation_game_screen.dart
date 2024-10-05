@@ -30,7 +30,6 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   String _text = '';
   String _selectedTimer = '';
   String _selectedDifficulty = '';
-  int _score = 0;
   String _gameSessionId = '';
   bool _isGameStarted = false;
   List<ChatMessage> _chatMessages = [];
@@ -91,20 +90,7 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
               textStyle: GoogleFonts.inter(fontWeight: FontWeight.bold),
             ),
           ),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Color(0xFFC6F432),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              'Score: $_score',
-              style: GoogleFonts.inter(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+          // Score button removed
         ],
       ),
     );
@@ -412,10 +398,6 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
             isSystem: true,
             isError: false,
           ));
-        }
-
-        if (response['score'] != null) {
-          _score = response['score'];
         }
       });
       _scrollToBottom();

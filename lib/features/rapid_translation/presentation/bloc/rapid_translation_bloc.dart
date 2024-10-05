@@ -57,16 +57,14 @@ class GameStarted extends RapidTranslationState {
 class TranslationSubmitted extends RapidTranslationState {
   final bool isCorrect;
   final String correctTranslation;
-  final int score;
 
   const TranslationSubmitted({
     required this.isCorrect,
     required this.correctTranslation,
-    required this.score,
   });
 
   @override
-  List<Object> get props => [isCorrect, correctTranslation, score];
+  List<Object> get props => [isCorrect, correctTranslation];
 }
 
 class NewSentenceReceived extends RapidTranslationState {
@@ -78,14 +76,7 @@ class NewSentenceReceived extends RapidTranslationState {
   List<Object> get props => [sentence];
 }
 
-class GameEnded extends RapidTranslationState {
-  final int finalScore;
-
-  const GameEnded({required this.finalScore});
-
-  @override
-  List<Object> get props => [finalScore];
-}
+class GameEnded extends RapidTranslationState {}
 
 class RapidTranslationError extends RapidTranslationState {
   final String message;
@@ -124,7 +115,6 @@ class RapidTranslationBloc extends Bloc<RapidTranslationEvent, RapidTranslationS
       emit(TranslationSubmitted(
         isCorrect: result['isCorrect'],
         correctTranslation: result['correctTranslation'],
-        score: result['score'],
       ));
     } catch (e) {
       emit(RapidTranslationError(message: 'Failed to submit translation: $e'));
@@ -142,8 +132,8 @@ class RapidTranslationBloc extends Bloc<RapidTranslationEvent, RapidTranslationS
 
   Future<void> _onEndGame(EndGame event, Emitter<RapidTranslationState> emit) async {
     try {
-      final result = await _apiService.endTranslationGame(_gameSessionId);
-      emit(GameEnded(finalScore: result['finalScore']));
+      await _apiService.endTranslationGame(_gameSessionId);
+      emit(GameEnded());
     } catch (e) {
       emit(RapidTranslationError(message: 'Failed to end game: $e'));
     }
