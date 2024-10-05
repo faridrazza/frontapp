@@ -4,6 +4,7 @@ import 'package:frontapp/features/settings/domain/models/settings_item.dart';
 import 'package:frontapp/features/settings/presentation/widgets/settings_container.dart';
 import 'package:frontapp/core/services/api_service.dart';
 import 'package:frontapp/features/auth/presentation/screens/edit_profile_screen.dart';
+import 'package:frontapp/features/settings/presentation/screens/report_problem_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   final ApiService _apiService = ApiService();
@@ -40,7 +41,11 @@ class SettingsScreen extends StatelessWidget {
         title: 'Report a problem',
         icon: Icons.flag,
         onTap: () {
-          // Navigate to report a problem screen
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => ReportProblemScreen(),
+            ),
+          );
         },
       ),
     ];
