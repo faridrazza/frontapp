@@ -341,14 +341,12 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
 
       if (response is Map<String, dynamic>) {
         final String nextSentence = response['sentence'] ?? 'No sentence provided';
-        final String sourceLanguage = response['sourceLanguage'] ?? 'Unknown';
         
         _logger.i('Next sentence: $nextSentence');
-        _logger.i('Source language: $sourceLanguage');
 
         setState(() {
           _chatMessages.add(ChatMessage(
-            text: nextSentence,
+            text: 'Translate: $nextSentence',
             isSystem: true,
             isError: false,
           ));
