@@ -1,5 +1,6 @@
-package com.example.frontapp
+package com.speakenglishwithconfidence.buddy
 
 import io.flutter.embedding.android.FlutterActivity
 
-class MainActivity: FlutterActivity()
+class MainActivity: FlutterActivity() {
+}
