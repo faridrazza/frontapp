@@ -307,4 +307,25 @@ class ApiService {
       throw Exception('Error submitting report: $e');
     }
   }
+
+  Future<void> submitCustomerSupport({required String name, required String email, required String message}) async {
+    try {
+      final token = await _storage.read(key: 'auth_token');
+      final response = await _dio.post(
+        '$_baseUrl/api/customer-support',
+        data: {
+          'name': name,
+          'email': email,
+          'message': message,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode != 201) {
+        throw Exception('Failed to submit customer support request');
+      }
+    } catch (e) {
+      throw Exception('Error submitting customer support request: $e');
+    }
+  }
 }

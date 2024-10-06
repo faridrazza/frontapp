@@ -10,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:frontapp/features/rapid_translation/presentation/bloc/rapid_translation_bloc.dart';
 import 'package:frontapp/features/rapid_translation/presentation/screens/rapid_translation_game_screen.dart';
 import 'package:frontapp/core/utils/navigation_utils.dart';
+import 'package:frontapp/features/settings/presentation/screens/help_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isNewUser;
@@ -233,34 +234,46 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildNavItem(IconData icon, String label, bool isActive) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 30,
-          height: 30,
-          decoration: BoxDecoration(
-            color: isActive ? Colors.black : Colors.transparent,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            icon,
-            color: isActive ? Colors.white : Colors.black,
-            size: 24,
-          ),
-        ),
-        SizedBox(height: 3),
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            textStyle: TextStyle(
-              color: Colors.black,
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
+    return GestureDetector(
+      onTap: () {
+        if (label == 'Help') {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => HelpScreen(),
+            ),
+          );
+        }
+        // Add other navigation logic for other items if needed
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: isActive ? Colors.black : Colors.transparent,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: isActive ? Colors.white : Colors.black,
+              size: 24,
             ),
           ),
-        ),
-      ],
+          SizedBox(height: 3),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              textStyle: TextStyle(
+                color: Colors.black,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
