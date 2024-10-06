@@ -13,6 +13,7 @@ import 'package:frontapp/core/utils/navigation_utils.dart';
 import 'package:frontapp/features/settings/presentation/screens/help_screen.dart';
 import 'package:frontapp/features/settings/presentation/screens/role_play_screen.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:frontapp/features/settings/presentation/screens/reminder_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isNewUser;
@@ -261,6 +262,12 @@ class _HomeScreenState extends State<HomeScreen> {
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => HelpScreen(),
+            ),
+          );
+        } else if (label == 'Reminder') {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => ReminderScreen(),
             ),
           );
         }
