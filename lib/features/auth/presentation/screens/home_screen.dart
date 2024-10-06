@@ -11,6 +11,7 @@ import 'package:frontapp/features/rapid_translation/presentation/bloc/rapid_tran
 import 'package:frontapp/features/rapid_translation/presentation/screens/rapid_translation_game_screen.dart';
 import 'package:frontapp/core/utils/navigation_utils.dart';
 import 'package:frontapp/features/settings/presentation/screens/help_screen.dart';
+import 'package:frontapp/features/settings/presentation/screens/role_play_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isNewUser;
@@ -187,6 +188,13 @@ class _HomeScreenState extends State<HomeScreen> {
               builder: (context) => RapidTranslationGameScreen(
                 targetLanguage: 'en-US', // Replace with the appropriate language code
               ),
+            ),
+          );
+        } else if (label == 'Role play ideas') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RolePlayScreen(),
             ),
           );
         }
