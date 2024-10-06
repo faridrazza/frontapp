@@ -12,6 +12,7 @@ import 'package:frontapp/features/rapid_translation/presentation/screens/rapid_t
 import 'package:frontapp/core/utils/navigation_utils.dart';
 import 'package:frontapp/features/settings/presentation/screens/help_screen.dart';
 import 'package:frontapp/features/settings/presentation/screens/role_play_screen.dart';
+import 'package:share_plus/share_plus.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isNewUser;
@@ -53,6 +54,18 @@ class _HomeScreenState extends State<HomeScreen> {
     // setState(() {
     //   _userName = 'Michael';
     // });
+  }
+
+  void _shareApp() {
+    final String appName = "Speak English Confidently";
+    final String appStoreLink = "https://apps.apple.com/app/your-app-id";
+    final String playStoreLink = "https://play.google.com/store/apps/details?id=your.app.package";
+    
+    final String message = "Check out $appName!\n\n"
+        "Download for iOS: $appStoreLink\n"
+        "Download for Android: $playStoreLink";
+
+    Share.share(message, subject: "Check out $appName!");
   }
 
   @override
@@ -152,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   _buildNavItem(Icons.home, 'Home', true),
                   _buildNavItem(Icons.notifications_none, 'Reminder', false),
-                  _buildNavItem(Icons.share, 'Share', false),
+                  _buildNavItem(Icons.share, 'Share', false, onTap: _shareApp),
                   _buildNavItem(Icons.headphones, 'Help', false),
                 ],
               ),
@@ -241,9 +254,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, bool isActive) {
+  Widget _buildNavItem(IconData icon, String label, bool isActive, {VoidCallback? onTap}) {
     return GestureDetector(
-      onTap: () {
+      onTap: onTap ?? () {
         if (label == 'Help') {
           Navigator.of(context).push(
             MaterialPageRoute(
