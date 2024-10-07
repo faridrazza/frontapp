@@ -31,13 +31,6 @@ class SettingsScreen extends StatelessWidget {
         },
       ),
       SettingsItem(
-        title: 'Share',
-        icon: Icons.share,
-        onTap: () {
-          // Implement share functionality
-        },
-      ),
-      SettingsItem(
         title: 'Report a problem',
         icon: Icons.flag,
         onTap: () {
