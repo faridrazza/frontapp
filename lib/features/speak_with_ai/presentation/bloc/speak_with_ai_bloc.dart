@@ -93,23 +93,40 @@ class SpeakWithAIBloc extends Bloc<SpeakWithAIEvent, SpeakWithAIState> {
     }
     if (state is SpeakWithAIConversation) {
       final currentState = state as SpeakWithAIConversation;
-      emit(currentState.copyWith(
+      final newState = currentState.copyWith(
         messages: [...currentState.messages, Message(
           content: event.message,
           isAI: false
         )],
         isLoading: true,
-      ));
+      );
+      emit(newState);
       _repository.sendMessage(currentState.conversationId, event.message);
       _logger.i('Message sent, waiting for AI response');
       
-      // Add timeout
-      await Future.delayed(Duration(seconds: 50));
-      if (state is SpeakWithAIConversation && (state as SpeakWithAIConversation).isLoading) {
-        // _logger.w('AI response timeout');
-        emit((state as SpeakWithAIConversation).copyWith(isLoading: false));
-        add(ReceiveMessage('AI response timeout. Please try again.', null));
-      }
+      // Add timeout with cancellation
+      bool responseReceived = false;
+      Timer? timeoutTimer;
+      
+      timeoutTimer = Timer(Duration(seconds: 50), () {
+        if (!responseReceived) {
+          _logger.w('AI response timeout');
+          if (state is SpeakWithAIConversation && (state as SpeakWithAIConversation).isLoading) {
+            emit((state as SpeakWithAIConversation).copyWith(isLoading: false));
+            add(ReceiveMessage('AI response timeout. Please try again.', null));
+          }
+        }
+      });
+
+      // Listen for the next ReceiveMessage event
+      StreamSubscription? subscription;
+      subscription = stream.listen((newState) {
+        if (newState is SpeakWithAIConversation && !newState.isLoading) {
+          responseReceived = true;
+          timeoutTimer?.cancel();
+          subscription?.cancel();
+        }
+      });
     } else {
       _logger.w('Attempted to send message while not in conversation state');
     }
