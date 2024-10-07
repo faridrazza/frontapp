@@ -138,169 +138,117 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: _WaveBackground(
-        isKeyboardVisibleNotifier: _isKeyboardVisible,
-        child: SafeArea(
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (notification) {
-              if (notification is ScrollUpdateNotification) {
-                final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
-                _isKeyboardVisible.value = keyboardHeight > 0;
-              }
-              return true;
-            },
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 48),
-                    ValueListenableBuilder<bool>(
-                      valueListenable: _isKeyboardVisible,
-                      builder: (context, isKeyboardVisible, child) {
-                        return AnimatedOpacity(
-                          opacity: isKeyboardVisible ? 0.0 : 1.0,
-                          duration: const Duration(milliseconds: 200),
-                          child: Text(
+      body: SafeArea(
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            if (notification is ScrollUpdateNotification) {
+              final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+              _isKeyboardVisible.value = keyboardHeight > 0;
+            }
+            return true;
+          },
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 48),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _isKeyboardVisible,
+                    builder: (context, isKeyboardVisible, child) {
+                      return AnimatedOpacity(
+                        opacity: isKeyboardVisible ? 0.0 : 1.0,
+                        duration: const Duration(milliseconds: 200),
+                        child: Text(
+                          'Verify OTP',
+                          style: GoogleFonts.inter(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            height: 1.2,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'We have sent you a 4-digit OTP.',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  TextField(
+                    controller: _otpController,
+                    style: TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'Enter OTP',
+                      hintStyle: TextStyle(color: Colors.white54),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white),
+                      ),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 16),
+                  if (_errorMessage.isNotEmpty)
+                    Text(
+                      _errorMessage,
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _verifyOtp,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFC6F432),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: _isLoading
+                        ? CircularProgressIndicator(color: Colors.black)
+                        : Text(
                             'Verify OTP',
                             style: GoogleFonts.inter(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              height: 1.2,
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
                             ),
                           ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 16),
+                  ),
+                  const SizedBox(height: 16),
+                  if (_timerSeconds > 0)
                     Text(
-                      'We have sent you a 4-digit OTP.',
+                      'Resend OTP in ${_timerSeconds}s',
                       style: GoogleFonts.inter(
-                        fontSize: 16,
                         color: Colors.white70,
+                        fontSize: 14,
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    TextField(
-                      controller: _otpController,
-                      style: TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        hintText: 'Enter OTP',
-                        hintStyle: TextStyle(color: Colors.white54),
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.white),
-                        ),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                    const SizedBox(height: 16),
-                    if (_errorMessage.isNotEmpty)
-                      Text(
-                        _errorMessage,
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: _isLoading ? null : _verifyOtp,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFC6F432),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: _isLoading
-                          ? CircularProgressIndicator(color: Colors.black)
-                          : Text(
-                              'Verify OTP',
-                              style: GoogleFonts.inter(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                    ),
-                    const SizedBox(height: 16),
-                    if (_timerSeconds > 0)
-                      Text(
-                        'Resend OTP in ${_timerSeconds}s',
+                      textAlign: TextAlign.center,
+                    )
+                  else
+                    TextButton(
+                      onPressed: _isLoading ? null : _resendOtp,
+                      child: Text(
+                        'Resend OTP',
                         style: GoogleFonts.inter(
-                          color: Colors.white70,
+                          color: const Color(0xFFC6F432),
                           fontSize: 14,
-                        ),
-                        textAlign: TextAlign.center,
-                      )
-                    else
-                      TextButton(
-                        onPressed: _isLoading ? null : _resendOtp,
-                        child: Text(
-                          'Resend OTP',
-                          style: GoogleFonts.inter(
-                            color: const Color(0xFFC6F432),
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                  ],
-                ),
+                    ),
+                ],
               ),
             ),
           ),
         ),
       ),
       resizeToAvoidBottomInset: true,
-    );
-  }
-}
-
-class _WaveBackground extends StatelessWidget {
-  final Widget child;
-  final ValueNotifier<bool> isKeyboardVisibleNotifier;
-
-  const _WaveBackground({
-    Key? key,
-    required this.child,
-    required this.isKeyboardVisibleNotifier,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        ValueListenableBuilder<bool>(
-          valueListenable: isKeyboardVisibleNotifier,
-          builder: (context, isKeyboardVisible, _) {
-            return AnimatedOpacity(
-              opacity: isKeyboardVisible ? 0.0 : 1.0,
-              duration: const Duration(milliseconds: 200),
-              child: Stack(
-                children: [
-                  Positioned(
-                    left: 20,
-                    bottom: MediaQuery.of(context).size.height * 0.4,
-                    child: Image.asset(
-                      'assets/images/waveleft.png',
-                      height: MediaQuery.of(context).size.height * 0.2,
-                    ),
-                  ),
-                  Positioned(
-                    right: 5,
-                    bottom: MediaQuery.of(context).size.height * 0.35,
-                    child: Image.asset(
-                      'assets/images/waveleft.png',
-                      height: MediaQuery.of(context).size.height * 0.28,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-        child,
-      ],
     );
   }
 }
