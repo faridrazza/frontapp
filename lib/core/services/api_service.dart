@@ -31,6 +31,8 @@ class ApiService {
     // Remove any non-digit characters from the phone number
     phoneNumber = phoneNumber.replaceAll(RegExp(r'\D'), '');
 
+    _logger.i('Sending OTP to: $countryCode$phoneNumber');
+
     try {
       final response = await _dio.post(
         '$_baseUrl/api/auth/send-otp',
@@ -41,11 +43,14 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
+        _logger.i('OTP sent successfully');
         return response.data;
       } else {
+        _logger.e('Failed to send OTP: ${response.statusCode}');
         throw Exception('Failed to send OTP');
       }
     } catch (e) {
+      _logger.e('Error sending OTP: $e');
       throw Exception('Error sending OTP: $e');
     }
   }
