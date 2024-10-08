@@ -123,27 +123,28 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                             },
                           ),
                           const SizedBox(height: 24),
-                          ElevatedButton(
-                            onPressed: () {
-                              // This button no longer submits the phone number
-                              // You can add any other functionality here if needed
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _isValid ? Colors.black : const Color(0xFFC6F432),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                          if (!_isValid) // Only show this button if the number is not valid
+                            ElevatedButton(
+                              onPressed: () {
+                                // This button no longer submits the phone number
+                                // You can add any other functionality here if needed
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFC6F432),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 16),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                            ),
-                            child: Text(
-                              'Enter Phone Number',
-                              style: GoogleFonts.inter(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                              child: Text(
+                                'Enter Phone Number',
+                                style: GoogleFonts.inter(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
                               ),
                             ),
-                          ),
                           const SizedBox(height: 16),
                           PhoneInputField(
                             onInputChanged: _updatePhoneNumber,
