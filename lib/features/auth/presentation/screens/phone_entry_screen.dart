@@ -4,6 +4,7 @@ import 'package:frontapp/features/auth/presentation/widgets/ai_orb.dart';
 import 'package:frontapp/features/auth/presentation/widgets/phone_input_field.dart';
 import 'package:frontapp/features/auth/presentation/screens/verify_otp_screen.dart';
 import 'package:frontapp/core/services/api_service.dart';
+import 'package:logger/logger.dart';
 
 class PhoneEntryScreen extends StatefulWidget {
   const PhoneEntryScreen({Key? key}) : super(key: key);
@@ -14,6 +15,7 @@ class PhoneEntryScreen extends StatefulWidget {
 
 class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
   final ApiService _apiService = ApiService();
+  final Logger _logger = Logger();
   String _phoneNumber = '';
   String _countryCode = '';
   bool _isValid = false;
@@ -31,9 +33,14 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
   void _updatePhoneNumber(String countryCode, String phoneNumber, bool isValid) {
     setState(() {
       _countryCode = countryCode;
+      // Remove the country code from the phone number if it's present
       _phoneNumber = phoneNumber.replaceAll(RegExp(r'\D'), '');
+      if (_phoneNumber.startsWith(_countryCode.replaceAll('+', ''))) {
+        _phoneNumber = _phoneNumber.substring(_countryCode.length - 1);
+      }
       _isValid = isValid;
     });
+    // Removed logger statement
   }
 
   Future<void> _sendOtp() async {
