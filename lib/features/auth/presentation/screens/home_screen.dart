@@ -35,10 +35,9 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _adService.loadInterstitialAd();
     _fetchUserProfile();
-    // Set the system UI overlay style
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      systemNavigationBarColor: Colors.black, // Set the color to black
-      systemNavigationBarIconBrightness: Brightness.light, // Set the icons to light color
+      systemNavigationBarColor: Colors.black,
+      systemNavigationBarIconBrightness: Brightness.light,
     ));
   }
 
@@ -50,14 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     } catch (e) {
       print('Error fetching user profile: $e');
-      // Handle error (e.g., show a snackbar)
     }
-
-    // Mock API call (commented out)
-    // await Future.delayed(Duration(seconds: 1));
-    // setState(() {
-    //   _userName = 'Michael';
-    // });
   }
 
   void _shareApp() {
@@ -77,85 +69,74 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Color(0xFF010101),
       body: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            // Background design
-            Positioned.fill(
-              child: Image.asset(
-                'assets/images/design.png',
-                fit: BoxFit.cover,
-              ),
-            ),
-            Column(
-              children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).push(NavigationUtils.createSettingsRoute());
-                        },
-                        child: Icon(Icons.menu, color: Colors.white, size: 24),
-                      ),
-                      Text(
-                        'Hi, $_userName 👋',
-                        style: GoogleFonts.inter(
-                          textStyle: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      CircleAvatar(
-                        backgroundImage: AssetImage('assets/images/profile.png'),
-                        radius: 16,
-                      ),
-                    ],
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(NavigationUtils.createSettingsRoute());
+                    },
+                    child: Icon(Icons.menu, color: Colors.white, size: 24),
                   ),
-                ),
-                // Main content
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Speak English\nConfidently,',
-                          style: GoogleFonts.inter(
-                            textStyle: TextStyle(
-                              color: Colors.white,
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 24),
-                        Expanded(
-                          child: GridView.count(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                            childAspectRatio: 183 / 104,
-                            children: [
-                              _buildFeatureButton('Speak with AI', Color(0xFFC6F432), Icons.record_voice_over),
-                              _buildFeatureButton('Scrambler sentence', Color(0xFFC09FF8), Icons.videogame_asset),
-                              _buildFeatureButton('Role play ideas', Color(0xFFFFB341), Icons.lightbulb),
-                              _buildFeatureButton('Rapid Sentence', Color(0xFFFEC4DD), Icons.qr_code),
-                            ],
-                          ),
-                        ),
-                      ],
+                  Text(
+                    'Hi, $_userName 👋',
+                    style: GoogleFonts.inter(
+                      textStyle: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
                     ),
                   ),
+                  CircleAvatar(
+                    backgroundImage: AssetImage('assets/images/profile.png'),
+                    radius: 16,
+                  ),
+                ],
+              ),
+            ),
+            // Main content
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Speak English\nConfidently,',
+                      style: GoogleFonts.inter(
+                        textStyle: TextStyle(
+                          color: Colors.white,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 24),
+                    Expanded(
+                      child: GridView.count(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 183 / 104,
+                        children: [
+                          _buildFeatureButton('Speak with AI', Color(0xFFC6F432), Icons.record_voice_over),
+                          _buildFeatureButton('Scrambler sentence', Color(0xFFC09FF8), Icons.videogame_asset),
+                          _buildFeatureButton('Role play ideas', Color(0xFFFFB341), Icons.lightbulb),
+                          _buildFeatureButton('Rapid Sentence', Color(0xFFFEC4DD), Icons.qr_code),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ],
         ),
       ),
       bottomNavigationBar: Padding(
-        padding: EdgeInsets.fromLTRB(16, 0, 16, 16), // Add padding to left, right, and bottom
+        padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: Container(
           decoration: BoxDecoration(
             color: Color(0xFFC6F432),
@@ -309,30 +290,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-}
-
-class BackgroundPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(0.1)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-
-    final path = Path();
-    for (var i = 0; i < 5; i++) {
-      path.moveTo(0, size.height * (0.2 + i * 0.2));
-      path.quadraticBezierTo(
-        size.width * 0.5,
-        size.height * (0.2 + i * 0.2 + 0.1),
-        size.width,
-        size.height * (0.2 + i * 0.2),
-      );
-    }
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
