@@ -40,4 +40,14 @@ class AdHelper {
       throw UnsupportedError("Unsupported platform");
     }
   }
+
+  static String get largeBannerAdUnitId {
+    if (Platform.isAndroid) {
+      return 'ca-app-pub-3940256099942544/6300978111'; // Replace with your actual ad unit ID
+    } else if (Platform.isIOS) {
+      return 'ca-app-pub-3940256099942544/2934735716'; // Replace with your actual ad unit ID
+    } else {
+      throw UnsupportedError('Unsupported platform');
+    }
+  }
 }

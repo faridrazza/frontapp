@@ -15,6 +15,7 @@ import 'package:frontapp/features/settings/presentation/screens/role_play_screen
 import 'package:share_plus/share_plus.dart';
 import 'package:frontapp/features/settings/presentation/screens/reminder_screen.dart';
 import 'package:frontapp/core/services/ad_service.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isNewUser;
@@ -33,6 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _adService.loadLargeBannerAd();
     _adService.loadInterstitialAd();
     _fetchUserProfile();
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
@@ -62,6 +64,12 @@ class _HomeScreenState extends State<HomeScreen> {
         "Download for Android: $playStoreLink";
 
     Share.share(message, subject: "Check out $appName!");
+  }
+
+  @override
+  void dispose() {
+    _adService.dispose();
+    super.dispose();
   }
 
   @override
@@ -128,6 +136,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     ),
+                    if (_adService.isLargeBannerAdReady)
+                      Container(
+                        alignment: Alignment.center,
+                        width: _adService.largeBannerAd!.size.width.toDouble(),
+                        height: _adService.largeBannerAd!.size.height.toDouble(),
+                        child: AdWidget(ad: _adService.largeBannerAd!),
+                      ),
+                    SizedBox(height: 10), // Add some space between ad and navigation
                   ],
                 ),
               ),

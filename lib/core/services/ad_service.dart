@@ -84,5 +84,32 @@ class AdService {
   void dispose() {
     _interstitialAd?.dispose();
     _rewardedAd?.dispose();
+    _largeBannerAd?.dispose();
   }
+
+  BannerAd? _largeBannerAd;
+  bool _isLargeBannerAdReady = false;
+
+  void loadLargeBannerAd() {
+    _largeBannerAd = BannerAd(
+      adUnitId: AdHelper.largeBannerAdUnitId,
+      request: AdRequest(),
+      size: AdSize.largeBanner,
+      listener: BannerAdListener(
+        onAdLoaded: (_) {
+          _isLargeBannerAdReady = true;
+        },
+        onAdFailedToLoad: (ad, err) {
+          print('Failed to load a banner ad: ${err.message}');
+          _isLargeBannerAdReady = false;
+          ad.dispose();
+        },
+      ),
+    );
+
+    _largeBannerAd?.load();
+  }
+
+  BannerAd? get largeBannerAd => _largeBannerAd;
+  bool get isLargeBannerAdReady => _isLargeBannerAdReady;
 }
