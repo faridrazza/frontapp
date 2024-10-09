@@ -49,6 +49,7 @@ dependencies:
   speech_to_text: ^6.1.1
   logger: ^2.4.0
   share_plus: ^7.0.0  # or the latest version available
+  google_mobile_ads: ^5.1.0 # Make sure this is the latest version
 
 dev_dependencies:
   flutter_test:
