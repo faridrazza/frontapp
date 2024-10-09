@@ -14,6 +14,7 @@ import 'package:frontapp/features/settings/presentation/screens/help_screen.dart
 import 'package:frontapp/features/settings/presentation/screens/role_play_screen.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:frontapp/features/settings/presentation/screens/reminder_screen.dart';
+import 'package:frontapp/core/services/ad_service.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isNewUser;
@@ -25,12 +26,14 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final AdService _adService = AdService();
   final ApiService _apiService = ApiService();
   String _userName = '';
 
   @override
   void initState() {
     super.initState();
+    _adService.loadInterstitialAd();
     _fetchUserProfile();
     // Set the system UI overlay style
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
@@ -179,8 +182,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildFeatureButton(String label, Color color, IconData icon) {
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         if (label == 'Speak with AI') {
+          await _adService.showInterstitialAd();
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -196,6 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         } else if (label == 'Rapid Sentence') {
+          await _adService.showInterstitialAd();
           Navigator.push(
             context,
             MaterialPageRoute(

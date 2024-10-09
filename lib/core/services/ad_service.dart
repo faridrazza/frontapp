@@ -3,38 +3,46 @@ import '../utils/ad_helper.dart';
 
 class AdService {
   InterstitialAd? _interstitialAd;
-  RewardedAd? _rewardedAd;
+  RewardedAd? _rewardedAd;  // Add this line
+  bool _isInterstitialAdReady = false;
 
   void loadInterstitialAd() {
     InterstitialAd.load(
-      adUnitId: AdHelper.interstitialAdUnitId,
+      adUnitId: AdHelper.interstitialVideoAdUnitId,
       request: AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
           _interstitialAd = ad;
+          _isInterstitialAdReady = true;
         },
         onAdFailedToLoad: (error) {
-          print('InterstitialAd failed to load: $error');
+          print('Video Interstitial ad failed to load: $error');
+          _isInterstitialAdReady = false;
         },
       ),
     );
   }
 
-  void showInterstitialAd() {
-    if (_interstitialAd != null) {
-      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-        onAdDismissedFullScreenContent: (ad) {
-          ad.dispose();
-          loadInterstitialAd();
-        },
-        onAdFailedToShowFullScreenContent: (ad, error) {
-          ad.dispose();
-          loadInterstitialAd();
-        },
-      );
-      _interstitialAd!.show();
-      _interstitialAd = null;
+  Future<void> showInterstitialAd() async {
+    if (!_isInterstitialAdReady) {
+      print('Video Interstitial ad is not ready yet.');
+      return;
     }
+
+    _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (ad) {
+        ad.dispose();
+        loadInterstitialAd();
+      },
+      onAdFailedToShowFullScreenContent: (ad, error) {
+        print('Failed to show video interstitial ad: $error');
+        ad.dispose();
+        loadInterstitialAd();
+      },
+    );
+
+    await _interstitialAd!.show();
+    _isInterstitialAdReady = false;
   }
 
   void loadRewardedAd() {
