@@ -56,7 +56,9 @@ class LearnWithAiBloc extends Bloc<LearnWithAiEvent, LearnWithAiState> {
   final ApiService _apiService;
   final Logger _logger = Logger();
 
-  LearnWithAiBloc(this._apiService) : super(LearnWithAiInitial()) {
+  LearnWithAiBloc(this._apiService) : super(LearnWithAiLoaded([
+    ChatMessage(text: "Hello, I am Farid AI. How can I assist you?", isUser: false)
+  ])) {
     on<SendMessage>(_onSendMessage);
   }
 

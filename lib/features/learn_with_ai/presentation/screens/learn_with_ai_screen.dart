@@ -21,12 +21,15 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> {
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _isListening = false;
   String _lastWords = '';
+  String _currentRecording = '';
   final Logger _logger = Logger();
 
   @override
   void initState() {
     super.initState();
     _initializeSpeechRecognition();
+    // Scroll to bottom after initialization to show the welcome message
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
   void _initializeSpeechRecognition() async {
@@ -115,7 +118,7 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> {
         } else if (state is LearnWithAiError) {
           return Center(child: Text('Error: ${state.error}', style: TextStyle(color: Colors.red)));
         }
-        return Center(child: CircularProgressIndicator());
+        return Container();
       },
     );
   }
@@ -130,7 +133,7 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> {
               controller: _textController,
               style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                hintText: 'Type your message',
+                hintText: _isListening ? 'Listening...' : 'Type your message',
                 hintStyle: TextStyle(color: Colors.grey),
                 filled: true,
                 fillColor: Colors.black,
@@ -148,22 +151,23 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> {
           ),
           SizedBox(width: 8),
           GestureDetector(
-            onTap: _isListening ? _stopListening : _startListening,
+            onTap: _toggleListening,
             child: Container(
-              padding: EdgeInsets.all(10),
+              width: 50,
+              height: 50,
               decoration: BoxDecoration(
-                color: Color(0xFFC6F432),
                 shape: BoxShape.circle,
+                color: _isListening ? Colors.red : Color(0xFFC6F432),
                 boxShadow: [
                   BoxShadow(
-                    color: Color(0xFFC6F432).withOpacity(0.3),
-                    blurRadius: 5,
-                    spreadRadius: 1,
+                    color: (_isListening ? Colors.red : Color(0xFFC6F432)).withOpacity(0.3),
+                    blurRadius: 10,
+                    spreadRadius: 2,
                   ),
                 ],
               ),
               child: Icon(
-                _isListening ? Icons.mic : Icons.mic_none,
+                Icons.mic,
                 color: Colors.black,
               ),
             ),
@@ -173,15 +177,26 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> {
     );
   }
 
+  void _toggleListening() {
+    if (_isListening) {
+      _stopListening();
+    } else {
+      _startListening();
+    }
+  }
+
   void _startListening() async {
     if (!_isListening) {
       bool available = await _speech.initialize();
       if (available) {
-        setState(() => _isListening = true);
+        setState(() {
+          _isListening = true;
+          _currentRecording = '';
+        });
         _speech.listen(
           onResult: (result) {
             setState(() {
-              _lastWords = result.recognizedWords;
+              _currentRecording = result.recognizedWords;
             });
           },
         );
@@ -192,9 +207,9 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> {
   void _stopListening() {
     _speech.stop();
     setState(() => _isListening = false);
-    if (_lastWords.isNotEmpty) {
-      _sendMessage(_lastWords);
-      _lastWords = '';
+    if (_currentRecording.isNotEmpty) {
+      _sendMessage(_currentRecording);
+      _currentRecording = '';
     }
   }
 
