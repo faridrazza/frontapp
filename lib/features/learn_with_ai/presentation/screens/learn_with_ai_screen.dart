@@ -20,6 +20,7 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> {
   final ScrollController _scrollController = ScrollController();
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _isListening = false;
+  String _lastWords = '';
   final Logger _logger = Logger();
 
   @override
@@ -132,7 +133,12 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> {
                   borderRadius: BorderRadius.circular(25),
                   borderSide: BorderSide.none,
                 ),
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.send, color: Color(0xFFC6F432)),
+                  onPressed: () => _sendMessage(_textController.text),
+                ),
               ),
+              onSubmitted: _sendMessage,
             ),
           ),
           SizedBox(width: 8),
@@ -170,7 +176,7 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> {
         _speech.listen(
           onResult: (result) {
             setState(() {
-              _textController.text = result.recognizedWords;
+              _lastWords = result.recognizedWords;
             });
           },
         );
@@ -181,7 +187,10 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> {
   void _stopListening() {
     _speech.stop();
     setState(() => _isListening = false);
-    _sendMessage(_textController.text);
+    if (_lastWords.isNotEmpty) {
+      _sendMessage(_lastWords);
+      _lastWords = '';
+    }
   }
 
   void _sendMessage(String text) {
