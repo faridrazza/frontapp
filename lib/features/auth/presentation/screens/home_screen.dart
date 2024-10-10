@@ -124,20 +124,21 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     SizedBox(height: 24),
-                    Expanded(
-                      child: GridView.count(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                        childAspectRatio: 183 / 104,
-                        children: [
-                          _buildFeatureButton('Speak with AI', Color(0xFFC6F432), Icons.record_voice_over),
-                          _buildFeatureButton('Learn with AI', Color(0xFFC09FF8), Icons.school), // Changed label and icon
-                          _buildFeatureButton('Role play ideas', Color(0xFFFFB341), Icons.lightbulb),
-                          _buildFeatureButton('Rapid Sentence', Color(0xFFFEC4DD), Icons.qr_code),
-                        ],
-                      ),
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 183 / 104,
+                      children: [
+                        _buildFeatureButton('Speak with AI', Color(0xFFC6F432), Icons.record_voice_over),
+                        _buildFeatureButton('Learn with AI', Color(0xFFC09FF8), Icons.school),
+                        _buildFeatureButton('Role play ideas', Color(0xFFFFB341), Icons.lightbulb),
+                        _buildFeatureButton('Rapid Sentence', Color(0xFFFEC4DD), Icons.qr_code),
+                      ],
                     ),
+                    SizedBox(height: 24), // Add padding before the ad
                     if (_adService.isLargeBannerAdReady)
                       Container(
                         alignment: Alignment.center,
@@ -145,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         height: _adService.largeBannerAd!.size.height.toDouble(),
                         child: AdWidget(ad: _adService.largeBannerAd!),
                       ),
-                    SizedBox(height: 10), // Add some space between ad and navigation
+                    Spacer(), // This will push the ad up, filling the remaining space
                   ],
                 ),
               ),
