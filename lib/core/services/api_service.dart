@@ -328,4 +328,27 @@ class ApiService {
       throw Exception('Error submitting customer support request: $e');
     }
   }
+
+  Future<Map<String, dynamic>> sendMessageToAI(String message) async {
+    try {
+      final token = await _storage.read(key: 'auth_token');
+      _logger.i('Sending message to AI: $message');
+      final response = await _dio.post(
+        '$_baseUrl/api/ai/chat',
+        data: {'message': message},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        _logger.i('Received response from AI: ${response.data}');
+        return response.data;
+      } else {
+        _logger.e('Failed to send message to AI. Status code: ${response.statusCode}');
+        throw Exception('Failed to send message to AI');
+      }
+    } catch (e) {
+      _logger.e('Error sending message to AI: $e');
+      throw Exception('Error sending message to AI: $e');
+    }
+  }
 }

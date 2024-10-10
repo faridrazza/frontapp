@@ -16,6 +16,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:frontapp/features/settings/presentation/screens/reminder_screen.dart';
 import 'package:frontapp/core/services/ad_service.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:frontapp/features/learn_with_ai/presentation/screens/learn_with_ai_screen.dart';
+import 'package:frontapp/features/learn_with_ai/presentation/bloc/learn_with_ai_bloc.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isNewUser;
@@ -130,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         childAspectRatio: 183 / 104,
                         children: [
                           _buildFeatureButton('Speak with AI', Color(0xFFC6F432), Icons.record_voice_over),
-                          _buildFeatureButton('Scrambler sentence', Color(0xFFC09FF8), Icons.videogame_asset),
+                          _buildFeatureButton('Learn with AI', Color(0xFFC09FF8), Icons.school), // Changed label and icon
                           _buildFeatureButton('Role play ideas', Color(0xFFFFB341), Icons.lightbulb),
                           _buildFeatureButton('Rapid Sentence', Color(0xFFFEC4DD), Icons.qr_code),
                         ],
@@ -193,6 +195,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 child: SpeakWithAIScreen(),
+              ),
+            ),
+          );
+        } else if (label == 'Learn with AI') {
+          await _adService.showInterstitialAd();
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BlocProvider(
+                create: (context) => LearnWithAiBloc(ApiService()),
+                child: LearnWithAiScreen(),
               ),
             ),
           );
