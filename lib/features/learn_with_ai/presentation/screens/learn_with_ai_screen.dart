@@ -47,10 +47,10 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> {
         child: Column(
           children: [
             _buildHeader(),
+            Divider(color: Color(0xFF333333), height: 1),
             Expanded(
               child: _buildChatArea(),
             ),
-            Divider(color: Color(0xFF333333), height: 1),
             _buildInputArea(),
           ],
         ),
@@ -96,7 +96,12 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> {
   }
 
   Widget _buildChatArea() {
-    return BlocBuilder<LearnWithAiBloc, LearnWithAiState>(
+    return BlocConsumer<LearnWithAiBloc, LearnWithAiState>(
+      listener: (context, state) {
+        if (state is LearnWithAiLoaded) {
+          _scrollToBottom();
+        }
+      },
       builder: (context, state) {
         if (state is LearnWithAiLoaded) {
           return ListView.builder(
@@ -198,7 +203,6 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> {
       _logger.i('Sending message from UI: $text');
       context.read<LearnWithAiBloc>().add(SendMessage(text));
       _textController.clear();
-      _scrollToBottom();
     }
   }
 
