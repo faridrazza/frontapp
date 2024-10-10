@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:frontapp/core/services/api_service.dart';
 import 'package:frontapp/features/learn_with_ai/presentation/bloc/learn_with_ai_bloc.dart';
 import 'package:frontapp/features/learn_with_ai/presentation/widgets/chat_bubble.dart';
@@ -86,7 +87,7 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> {
           ),
           SizedBox(width: 12),
           Text(
-            'Farid AI',
+            'Mili AI',
             style: GoogleFonts.inter(
               color: Color(0xFFC6F432),
               fontSize: 18,

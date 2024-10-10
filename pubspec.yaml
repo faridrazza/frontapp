@@ -50,6 +50,7 @@ dependencies:
   logger: ^2.4.0
   share_plus: ^7.0.0  # or the latest version available
   google_mobile_ads: ^5.1.0 # Make sure this is the latest version
+  flutter_tts: ^4.0.2
 
 dev_dependencies:
   flutter_test:
