@@ -8,6 +8,7 @@ import 'package:frontapp/features/learn_with_ai/presentation/bloc/learn_with_ai_
 import 'package:frontapp/features/learn_with_ai/presentation/widgets/chat_bubble.dart';
 import 'package:frontapp/features/learn_with_ai/domain/models/chat_message.dart';
 import 'package:logger/logger.dart';
+import 'dart:async';
 
 class LearnWithAiScreen extends StatefulWidget {
   const LearnWithAiScreen({Key? key}) : super(key: key);
@@ -16,7 +17,7 @@ class LearnWithAiScreen extends StatefulWidget {
   _LearnWithAiScreenState createState() => _LearnWithAiScreenState();
 }
 
-class _LearnWithAiScreenState extends State<LearnWithAiScreen> {
+class _LearnWithAiScreenState extends State<LearnWithAiScreen> with SingleTickerProviderStateMixin {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final stt.SpeechToText _speech = stt.SpeechToText();
@@ -24,12 +25,18 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> {
   String _lastWords = '';
   String _currentRecording = '';
   final Logger _logger = Logger();
+  late AnimationController _micAnimationController;
+  Timer? _recordingTimer;
+  static const int _recordingTimeout = 30; // 30 seconds max recording time
 
   @override
   void initState() {
     super.initState();
     _initializeSpeechRecognition();
-    // Scroll to bottom after initialization to show the welcome message
+    _micAnimationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 500),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
@@ -153,24 +160,29 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> {
           SizedBox(width: 8),
           GestureDetector(
             onTap: _toggleListening,
-            child: Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _isListening ? Colors.red : Color(0xFFC6F432),
-                boxShadow: [
-                  BoxShadow(
-                    color: (_isListening ? Colors.red : Color(0xFFC6F432)).withOpacity(0.3),
-                    blurRadius: 10,
-                    spreadRadius: 2,
+            child: AnimatedBuilder(
+              animation: _micAnimationController,
+              builder: (context, child) {
+                return Container(
+                  width: 50 + (_isListening ? _micAnimationController.value * 10 : 0),
+                  height: 50 + (_isListening ? _micAnimationController.value * 10 : 0),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _isListening ? Colors.red : Color(0xFFC6F432),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (_isListening ? Colors.red : Color(0xFFC6F432)).withOpacity(0.3),
+                        blurRadius: 10,
+                        spreadRadius: 2,
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Icon(
-                Icons.mic,
-                color: Colors.black,
-              ),
+                  child: Icon(
+                    Icons.mic,
+                    color: Colors.black,
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -188,30 +200,60 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> {
 
   void _startListening() async {
     if (!_isListening) {
-      bool available = await _speech.initialize();
+      bool available = await _speech.initialize(
+        onError: (error) => _handleSpeechError(error.errorMsg),
+      );
       if (available) {
         setState(() {
           _isListening = true;
           _currentRecording = '';
         });
+        _micAnimationController.repeat(reverse: true);
         _speech.listen(
           onResult: (result) {
             setState(() {
               _currentRecording = result.recognizedWords;
+              _textController.text = _currentRecording;
             });
           },
         );
+        _startRecordingTimer();
+      } else {
+        _handleSpeechError("Speech recognition not available");
       }
     }
   }
 
   void _stopListening() {
     _speech.stop();
+    _micAnimationController.stop();
+    _micAnimationController.reset();
     setState(() => _isListening = false);
+    _cancelRecordingTimer();
     if (_currentRecording.isNotEmpty) {
       _sendMessage(_currentRecording);
       _currentRecording = '';
+      _textController.clear();
     }
+  }
+
+  void _startRecordingTimer() {
+    _recordingTimer = Timer(Duration(seconds: _recordingTimeout), () {
+      _stopListening();
+    });
+  }
+
+  void _cancelRecordingTimer() {
+    _recordingTimer?.cancel();
+    _recordingTimer = null;
+  }
+
+  void _handleSpeechError(String errorMsg) {
+    _logger.e('Speech recognition error: $errorMsg');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error: $errorMsg')),
+    );
+    _stopListening();
   }
 
   void _sendMessage(String text) {
@@ -238,6 +280,8 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> {
   void dispose() {
     _textController.dispose();
     _scrollController.dispose();
+    _micAnimationController.dispose();
+    _cancelRecordingTimer();
     super.dispose();
   }
 }
