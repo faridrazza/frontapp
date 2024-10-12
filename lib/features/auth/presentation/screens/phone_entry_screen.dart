@@ -40,7 +40,6 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
       }
       _isValid = isValid;
     });
-    // Removed logger statement
   }
 
   Future<void> _sendOtp() async {

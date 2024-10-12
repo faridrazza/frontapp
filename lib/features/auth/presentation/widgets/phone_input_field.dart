@@ -36,7 +36,6 @@ class _PhoneInputFieldState extends State<PhoneInputField> {
                 setState(() {
                   this.number = number;
                 });
-                // Removed logger statement
                 widget.onInputChanged(number.dialCode ?? '', number.phoneNumber ?? '', isValid);
               },
               onInputValidated: (bool value) {

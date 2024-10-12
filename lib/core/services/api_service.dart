@@ -10,7 +10,7 @@ class ApiService {
   final Logger _logger = Logger();
 
   // Use this for local development
-  static const String _baseUrlDev = 'http://192.168.0.104:5000'; // Replace with your computer's IP
+  static const String _baseUrlDev = 'http://192.168.0.105:5000'; // Verify this IP and port
   // Use this for production (replace with your actual production URL when ready)
   static const String _baseUrlProd = 'https://your-deployed-backend.com';
 

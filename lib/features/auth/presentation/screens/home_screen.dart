@@ -59,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _shareApp() {
     final String appName = "Speak English Confidently";
     final String appStoreLink = "https://apps.apple.com/app/your-app-id";
-    final String playStoreLink = "https://play.google.com/store/apps/details?id=your.app.package";
+    final String playStoreLink = "https://play.google.com/store/apps/details?com.speakenglishwithconfidence.buddy";
     
     final String message = "Check out $appName!\n\n"
         "Download for iOS: $appStoreLink\n"
