@@ -3,21 +3,22 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logger/logger.dart';
+import 'package:your_app/core/config/app_config.dart';
 
 class ApiService {
   final Dio _dio = Dio();
   final FlutterSecureStorage _storage = FlutterSecureStorage();
   final Logger _logger = Logger();
 
-  // Use this for local development
-  static const String _baseUrlDev = 'http://192.168.0.105:5000'; // Verify this IP and port
-  // Use this for production (replace with your actual production URL when ready)
-  static const String _baseUrlProd = 'https://your-deployed-backend.com';
+  // // Use this for local development
+  // static const String _baseUrlDev = 'http://192.168.0.105:5000'; // Verify this IP and port
+  // // Use this for production (replace with your actual production URL when ready)
+  // static const String _baseUrlProd = 'https://your-deployed-backend.com';
 
   // Set this to true for production, false for local development
   static const bool _isProduction = false;
 
-  static String get _baseUrl => _isProduction ? _baseUrlProd : _baseUrlDev;
+  static String get _baseUrl => AppConfig.baseUrl;
 
   Future<Map<String, dynamic>> sendOtp(String countryCode, String phoneNumber) async {
     // Ensure country code starts with '+' and is not longer than 4 characters

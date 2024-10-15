@@ -98,3 +98,4 @@ linux/
 # Sensitive environment or config files
 .env
 
+lib/core/config/app_config.dart
