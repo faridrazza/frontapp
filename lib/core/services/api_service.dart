@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logger/logger.dart';
-import 'package:your_app/core/config/app_config.dart';
+import 'package:frontapp/core/config/app_config.dart';
 
 class ApiService {
   final Dio _dio = Dio();
