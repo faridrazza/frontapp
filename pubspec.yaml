@@ -51,6 +51,7 @@ dependencies:
   share_plus: ^7.0.0  # or the latest version available
   google_mobile_ads: ^5.1.0 # Make sure this is the latest version
   flutter_tts: ^4.0.2
+  flutter_launcher_icons: ^0.14.1
 
 dev_dependencies:
   flutter_test:
@@ -59,6 +60,26 @@ dev_dependencies:
   build_runner: ^2.4.6
   freezed: ^2.4.2
   json_serializable: ^6.7.1
+
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/app_icon3.png"
+  remove_alpha_ios: true
+  min_sdk_android:  24
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "assets/images/app_icon3.png"
+
+
+
+# flutter_launcher_icons:
+#   android: "launcher_icon"
+#   ios: true
+#   image_path: "assets/icon/icon.png"
+#   min_sdk_android: 21   
+
+
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -90,6 +111,7 @@ flutter:
     - assets/images/AI.png
     - assets/images/aichat.png
     - assets/images/role_play_character.png
+    - assets/images/app_icon.png
     # - assets/images/record.png
     # - assets/images/ai_avatar.png
     - assets/images/waveai.png
