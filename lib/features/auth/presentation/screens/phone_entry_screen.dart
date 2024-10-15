@@ -20,6 +20,7 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
   String _countryCode = '';
   bool _isValid = false;
   final ValueNotifier<bool> _isKeyboardVisible = ValueNotifier<bool>(false);
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -168,7 +169,7 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                     children: [
                       if (_isValid)
                         ElevatedButton(
-                          onPressed: _sendOtp,
+                          onPressed: _isLoading ? null : _sendOtp,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFC6F432),
                             shape: RoundedRectangleBorder(
@@ -176,14 +177,23 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
-                          child: Text(
-                            'Submit',
-                            style: GoogleFonts.inter(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
+                          child: _isLoading
+                            ? SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.black,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(
+                                'Submit',
+                                style: GoogleFonts.inter(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
                         ),
                       const SizedBox(height: 16),
                       Text(
