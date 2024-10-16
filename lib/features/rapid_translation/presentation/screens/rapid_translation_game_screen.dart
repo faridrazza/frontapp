@@ -72,6 +72,10 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
               child: _isGameStarted ? _buildChatArea() : _buildGameSetup(),
             ),
             _buildBottomActions(),
+            if (_isLoading) // Show loading indicator when loading
+              Center(
+                child: CircularProgressIndicator(),
+              ),
           ],
         ),
       ),
@@ -325,18 +329,25 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
 
   void _startGame() async {
     try {
+      setState(() {
+        _isLoading = true; // Set loading to true when starting the game
+      });
       final result = await _apiService.startTranslationGame(_selectedDifficulty, _selectedTimer);
       setState(() {
         _gameSessionId = result['gameSessionId'];
         _isGameStarted = true;
       });
-      _getNextSentence();
+      await _getNextSentence(); // Wait for the first sentence
     } catch (e) {
       // Handle error
+    } finally {
+      setState(() {
+        _isLoading = false; // Reset loading state after receiving the first sentence
+      });
     }
   }
 
-  void _getNextSentence() async {
+  Future<void> _getNextSentence() async {
     if (_isPaused) return;
     _logger.i('Getting next sentence');
     try {
@@ -345,7 +356,6 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
 
       if (response is Map<String, dynamic>) {
         final String nextSentence = response['sentence'] ?? 'No sentence provided';
-        
         _logger.i('Next sentence: $nextSentence');
 
         setState(() {
@@ -354,10 +364,10 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
             isSystem: true,
             isError: false,
           ));
+          _scrollToBottom();
+          _showNewSentenceIndicator();
+          _startTimer(); // Start the timer after receiving a new sentence
         });
-        _scrollToBottom();
-        _showNewSentenceIndicator();
-        _startTimer(); // Start the timer after receiving a new sentence
       } else {
         _logger.w('Unexpected response format: $response');
         setState(() {
