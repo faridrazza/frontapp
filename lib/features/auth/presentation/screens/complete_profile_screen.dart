@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:frontapp/core/services/api_service.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontapp/features/auth/presentation/screens/home_screen.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 
 class CompleteProfileScreen extends StatefulWidget {
   @override
@@ -32,7 +33,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       try {
         await _apiService.completeProfile(_name, _email, _nativeLanguage);
         // Store the token securely after completing the profile
-        await _storage.write(key: 'auth_token', value: 'some_token'); // Replace with actual token if available
+        // await _storage.write(key: 'auth_token', value: 'some_token'); // Replace with actual token if available
         
         // Wait for the profile to be saved before navigating
         Navigator.of(context).pushReplacement(
