@@ -157,7 +157,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'We have sent you a 4-digit OTP.',
+                    'We have sent you a 6-digit OTP.',
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       color: Colors.white70,

@@ -70,7 +70,7 @@ flutter_launcher_icons:
   image_path: "assets/images/app_icon3.png"
   remove_alpha_ios: true
   min_sdk_android:  24
-  adaptive_icon_background: "#ffffff"
+  adaptive_icon_background: "#000000"
   adaptive_icon_foreground: "assets/images/app_icon3.png"
 
 
@@ -113,7 +113,7 @@ flutter:
     - assets/images/AI.png
     - assets/images/aichat.png
     - assets/images/role_play_character.png
-    - assets/images/app_icon.png
+    # - assets/images/app_icon.png
     # - assets/images/record.png
     # - assets/images/ai_avatar.png
     - assets/images/waveai.png
