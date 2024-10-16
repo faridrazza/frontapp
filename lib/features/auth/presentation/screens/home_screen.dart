@@ -57,12 +57,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _shareApp() {
-    final String appName = "Speak English Confidently";
-    final String appStoreLink = "https://apps.apple.com/app/your-app-id";
+    final String appName = "Speakjar: A platform where you can Speak English Confidently";
+    // final String appStoreLink = "https://apps.apple.com/app/your-app-id";
     final String playStoreLink = "https://play.google.com/store/apps/details?com.speakenglishwithconfidence.buddy";
     
     final String message = "Check out $appName!\n\n"
-        "Download for iOS: $appStoreLink\n"
+        // "Download for iOS: $appStoreLink\n"
         "Download for Android: $playStoreLink";
 
     Share.share(message, subject: "Check out $appName!");
@@ -168,7 +168,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _buildNavItem(Icons.home, 'Home', true),
-                  _buildNavItem(Icons.notifications_none, 'Reminder', false),
                   _buildNavItem(Icons.share, 'Share', false, onTap: _shareApp),
                   _buildNavItem(Icons.headphones, 'Help', false),
                 ],
