@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:frontapp/core/services/api_service.dart';
 import 'package:frontapp/features/auth/presentation/screens/complete_profile_screen.dart';
 import 'package:frontapp/features/auth/presentation/screens/home_screen.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class VerifyOtpScreen extends StatefulWidget {
   final String phoneNumber;
@@ -27,6 +28,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
   int _timerSeconds = 60;
   Timer? _timer;
   bool _isLoading = false;
+  final FlutterSecureStorage _storage = FlutterSecureStorage();
 
   @override
   void initState() {
@@ -63,7 +65,6 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
       _errorMessage = '';
     });
 
-    // Actual API implementation
     try {
       final response = await _apiService.verifyOtp(
         widget.countryCode,
@@ -72,6 +73,8 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
       );
 
       if (response['isProfileComplete']) {
+        // Store the token securely
+        await _storage.write(key: 'auth_token', value: response['token']);
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => HomeScreen(isNewUser: false)),
         );
@@ -85,26 +88,6 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
         _errorMessage = 'Invalid OTP. Please try again.';
       });
     }
-
-    // Mock implementation (commented out)
-    // await Future.delayed(Duration(seconds: 2));
-    // if (_otpController.text == '1234') {
-    //   bool isProfileComplete = DateTime.now().millisecond % 2 == 0;
-
-    //   if (isProfileComplete) {
-    //     Navigator.of(context).pushReplacement(
-    //       MaterialPageRoute(builder: (_) => HomeScreen(isNewUser: false)),
-    //     );
-    //   } else {
-    //     Navigator.of(context).pushReplacement(
-    //       MaterialPageRoute(builder: (_) => CompleteProfileScreen()),
-    //     );
-    //   }
-    // } else {
-    //   setState(() {
-    //     _errorMessage = 'Invalid OTP. Please try again. Hint: Use 1234';
-    //   });
-    // }
 
     setState(() {
       _isLoading = false;

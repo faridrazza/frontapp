@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:frontapp/core/services/api_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontapp/features/auth/presentation/screens/home_screen.dart';
 
 class CompleteProfileScreen extends StatefulWidget {
@@ -11,6 +12,7 @@ class CompleteProfileScreen extends StatefulWidget {
 class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final ApiService _apiService = ApiService();
+  final FlutterSecureStorage _storage = FlutterSecureStorage();
   
   String _name = '';
   String _email = '';
@@ -27,9 +29,12 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         _errorMessage = '';
       });
 
-      // Actual API implementation
       try {
         await _apiService.completeProfile(_name, _email, _nativeLanguage);
+        // Store the token securely after completing the profile
+        await _storage.write(key: 'auth_token', value: 'some_token'); // Replace with actual token if available
+        
+        // Wait for the profile to be saved before navigating
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => HomeScreen(isNewUser: true)),
         );
@@ -38,12 +43,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           _errorMessage = 'Failed to complete profile. Please try again.';
         });
       }
-
-      // Mock implementation (commented out)
-      // await Future.delayed(Duration(seconds: 2));
-      // Navigator.of(context).pushReplacement(
-      //   MaterialPageRoute(builder: (_) => HomeScreen(isNewUser: true)),
-      // );
 
       setState(() {
         _isLoading = false;

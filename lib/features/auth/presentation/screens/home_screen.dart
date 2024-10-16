@@ -22,7 +22,7 @@ import 'package:frontapp/features/learn_with_ai/presentation/bloc/learn_with_ai_
 class HomeScreen extends StatefulWidget {
   final bool isNewUser;
 
-  const HomeScreen({Key? key, required this.isNewUser}) : super(key: key);
+  const HomeScreen({Key? key, this.isNewUser = false}) : super(key: key);
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _adService.loadLargeBannerAd();
     _adService.loadInterstitialAd();
-    _fetchUserProfile();
+    _fetchUserProfile(); // Fetch user profile immediately after initialization
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       systemNavigationBarColor: Colors.black,
       systemNavigationBarIconBrightness: Brightness.light,
