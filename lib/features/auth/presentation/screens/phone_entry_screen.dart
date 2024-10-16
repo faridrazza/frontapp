@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:frontapp/features/auth/presentation/widgets/ai_orb.dart';
 import 'package:frontapp/features/auth/presentation/widgets/phone_input_field.dart';
 import 'package:frontapp/features/auth/presentation/screens/verify_otp_screen.dart';
 import 'package:frontapp/core/services/api_service.dart';
 import 'package:logger/logger.dart';
+import 'package:flutter/gestures.dart';
 
 class PhoneEntryScreen extends StatefulWidget {
   const PhoneEntryScreen({Key? key}) : super(key: key);
@@ -77,6 +79,14 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
         ),
       ),
     );
+  }
+
+  void _launchURL(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 
   @override
@@ -196,13 +206,43 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                               ),
                         ),
                       const SizedBox(height: 16),
-                      Text(
-                        'By using Englishbro, you agree to our Terms & Conditions and Privacy policy',
-                        style: GoogleFonts.inter(
-                          color: Colors.white54,
-                          fontSize: 12,
-                        ),
+                      RichText(
                         textAlign: TextAlign.center,
+                        text: TextSpan(
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                          children: [
+                            const TextSpan(
+                              text: 'By using Englishbro, you agree to our ',
+                            ),
+                            TextSpan(
+                              text: 'Terms & Conditions',
+                              style: const TextStyle(
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline,
+                              ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () {
+                                  // Add Terms & Conditions URL when available
+                                  _launchURL('https://speakjar.blogspot.com/2024/10/terms-and-conditions.html');
+                                },
+                            ),
+                            const TextSpan(text: ' and '),
+                            TextSpan(
+                              text: 'Privacy Policy',
+                              style: const TextStyle(
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline,
+                              ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () {
+                                  _launchURL('https://speakjar.blogspot.com/2024/10/data-custom-classbody-data-custom.html');
+                                },
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

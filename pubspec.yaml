@@ -52,6 +52,8 @@ dependencies:
   google_mobile_ads: ^5.1.0 # Make sure this is the latest version
   flutter_tts: ^4.0.2
   flutter_launcher_icons: ^0.14.1
+  url_launcher: ^6.1.10
+  shared_preferences: ^2.0.15
 
 dev_dependencies:
   flutter_test:
