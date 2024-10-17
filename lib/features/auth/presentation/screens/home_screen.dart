@@ -46,12 +46,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     ));
   }
 
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this); // Remove observer
-    _adService.dispose();
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   WidgetsBinding.instance.removeObserver(this); // Remove observer
+  //   _adService.dispose();
+  //   super.dispose();
+  // }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -69,6 +69,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     } catch (e) {
       print('Error fetching user profile: $e');
     }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this); // Remove observer
+    _adService.dispose();
+    super.dispose();
   }
 
   void _shareApp() {
@@ -147,7 +154,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         _buildFeatureButton('Rapid Sentence', Color(0xFFFEC4DD), Icons.qr_code),
                       ],
                     ),
-                    SizedBox(height: 24), // Add padding before the ad
+                    SizedBox(height: 35), // Add padding before the ad
                     if (_adService.isLargeBannerAdReady)
                       Container(
                         alignment: Alignment.center,
