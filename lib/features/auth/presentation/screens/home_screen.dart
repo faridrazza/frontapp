@@ -18,6 +18,7 @@ import 'package:frontapp/core/services/ad_service.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:frontapp/features/learn_with_ai/presentation/screens/learn_with_ai_screen.dart';
 import 'package:frontapp/features/learn_with_ai/presentation/bloc/learn_with_ai_bloc.dart';
+import 'package:connectivity_plus/connectivity_plus.dart'; // Ensure this import is present
 
 class HomeScreen extends StatefulWidget {
   final bool isNewUser;
@@ -32,26 +33,41 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final ApiService _apiService = ApiService();
   String _userName = '';
   final AdService _adService = AdService();
+  late Stream<List<ConnectivityResult>> _connectivityStream; // Change to List
+  bool _isConnected = true;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this); // Add observer
-    _fetchUserProfile(); // Initial fetch
-    _adService.loadLargeBannerAd();
-    _adService.loadInterstitialAd();
+    _connectivityStream = Connectivity().onConnectivityChanged; // Stream<List<ConnectivityResult>>
+    _connectivityStream.listen(_updateConnectionStatus);
+    _checkInitialConnection(); // Check initial connection
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       systemNavigationBarColor: Colors.black,
       systemNavigationBarIconBrightness: Brightness.light,
     ));
   }
 
-  // @override
-  // void dispose() {
-  //   WidgetsBinding.instance.removeObserver(this); // Remove observer
-  //   _adService.dispose();
-  //   super.dispose();
-  // }
+  Future<void> _checkInitialConnection() async {
+    final List<ConnectivityResult> results = await (Connectivity().checkConnectivity());
+    _updateConnectionStatus(results);
+  }
+
+  void _updateConnectionStatus(List<ConnectivityResult> results) {
+    setState(() {
+      _isConnected = results.isNotEmpty && (results.contains(ConnectivityResult.mobile) || results.contains(ConnectivityResult.wifi));
+    });
+    if (!_isConnected) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No internet connection.')),
+      );
+    } else {
+      _fetchUserProfile(); // Fetch profile if connected
+      _adService.loadLargeBannerAd(); // Load ads if connected
+      _adService.loadInterstitialAd(); // Load ads if connected
+    }
+  }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -80,11 +96,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   void _shareApp() {
     final String appName = "Speakjar: A platform where you can Speak English Confidently";
-    // final String appStoreLink = "https://apps.apple.com/app/your-app-id";
     final String playStoreLink = "https://play.google.com/store/apps/details?com.speakenglishwithconfidence.buddy";
     
     final String message = "Check out $appName!\n\n"
-        // "Download for iOS: $appStoreLink\n"
         "Download for Android: $playStoreLink";
 
     Share.share(message, subject: "Check out $appName!");
