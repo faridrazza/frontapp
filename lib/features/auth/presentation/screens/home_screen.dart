@@ -177,7 +177,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _buildNavItem(Icons.home, 'Home', true),
-                  _buildNavItem(Icons.refresh, 'Refresh', false, onTap: _fetchUserProfile), // Add refresh button
                   _buildNavItem(Icons.share, 'Share', false, onTap: _shareApp),
                   _buildNavItem(Icons.headphones, 'Help', false),
                 ],
