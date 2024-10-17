@@ -28,24 +28,36 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final ApiService _apiService = ApiService();
   String _userName = '';
   final AdService _adService = AdService();
-  // final ApiService _apiService = ApiService();
-  // String _userName = '';
 
   @override
   void initState() {
     super.initState();
-    _fetchUserProfile();
+    WidgetsBinding.instance.addObserver(this); // Add observer
+    _fetchUserProfile(); // Initial fetch
     _adService.loadLargeBannerAd();
     _adService.loadInterstitialAd();
-    // _fetchUserProfile(); // Fetch user profile immediately after initialization
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       systemNavigationBarColor: Colors.black,
       systemNavigationBarIconBrightness: Brightness.light,
     ));
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this); // Remove observer
+    _adService.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _fetchUserProfile(); // Fetch profile when app is resumed
+    }
   }
 
   Future<void> _fetchUserProfile() async {
@@ -69,12 +81,6 @@ class _HomeScreenState extends State<HomeScreen> {
         "Download for Android: $playStoreLink";
 
     Share.share(message, subject: "Check out $appName!");
-  }
-
-  @override
-  void dispose() {
-    _adService.dispose();
-    super.dispose();
   }
 
   @override
