@@ -94,7 +94,7 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> with SingleTicker
           ),
           SizedBox(width: 12),
           Text(
-            'Mili AI',
+            'Hiba AI',
             style: GoogleFonts.inter(
               color: Color(0xFFC6F432),
               fontSize: 18,

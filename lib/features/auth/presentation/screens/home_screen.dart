@@ -29,16 +29,19 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final AdService _adService = AdService();
   final ApiService _apiService = ApiService();
   String _userName = '';
+  final AdService _adService = AdService();
+  // final ApiService _apiService = ApiService();
+  // String _userName = '';
 
   @override
   void initState() {
     super.initState();
+    _fetchUserProfile();
     _adService.loadLargeBannerAd();
     _adService.loadInterstitialAd();
-    _fetchUserProfile(); // Fetch user profile immediately after initialization
+    // _fetchUserProfile(); // Fetch user profile immediately after initialization
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       systemNavigationBarColor: Colors.black,
       systemNavigationBarIconBrightness: Brightness.light,

@@ -115,7 +115,7 @@ class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTicker
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('AI Asma', style: TextStyle(color: Color(0xFFC6F432), fontSize: 18, fontWeight: FontWeight.bold)),
+              Text('Hiba AI', style: TextStyle(color: Color(0xFFC6F432), fontSize: 18, fontWeight: FontWeight.bold)),
               Row(
                 children: [
                   Container(
@@ -161,7 +161,7 @@ class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTicker
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
-                      "Hi, I'm Asma, your English speaking partner",
+                      "Hi, I'm Hiba, your English speaking partner",
                       style: TextStyle(color: Colors.white, fontSize: 14),
                     ),
                   ),
