@@ -22,7 +22,7 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
   String _countryCode = '';
   bool _isValid = false;
   final ValueNotifier<bool> _isKeyboardVisible = ValueNotifier<bool>(false);
-  bool _isLoading = false;
+  bool _isLoading = false; // Add loading state
 
   @override
   void initState() {
@@ -36,7 +36,6 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
   void _updatePhoneNumber(String countryCode, String phoneNumber, bool isValid) {
     setState(() {
       _countryCode = countryCode;
-      // Remove the country code from the phone number if it's present
       _phoneNumber = phoneNumber.replaceAll(RegExp(r'\D'), '');
       if (_phoneNumber.startsWith(_countryCode.replaceAll('+', ''))) {
         _phoneNumber = _phoneNumber.substring(_countryCode.length - 1);
@@ -53,6 +52,10 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
       return;
     }
 
+    setState(() {
+      _isLoading = true; // Set loading to true
+    });
+
     try {
       final response = await _apiService.sendOtp(_countryCode, _phoneNumber);
       if (response['message'] != null) {
@@ -66,6 +69,10 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error sending OTP: ${e.toString()}')),
       );
+    } finally {
+      setState(() {
+        _isLoading = false; // Reset loading state
+      });
     }
   }
 
@@ -225,7 +232,6 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                               ),
                               recognizer: TapGestureRecognizer()
                                 ..onTap = () {
-                                  // Add Terms & Conditions URL when available
                                   _launchURL('https://speakjar.blogspot.com/2024/10/terms-and-conditions.html');
                                 },
                             ),
