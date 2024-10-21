@@ -19,6 +19,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:frontapp/features/learn_with_ai/presentation/screens/learn_with_ai_screen.dart';
 import 'package:frontapp/features/learn_with_ai/presentation/bloc/learn_with_ai_bloc.dart';
 import 'package:connectivity_plus/connectivity_plus.dart'; // Ensure this import is present
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isNewUser;

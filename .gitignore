@@ -99,3 +99,11 @@ linux/
 .env
 
 lib/core/config/app_config.dart
+
+
+
+# Ignore key properties file
+/android/key.properties
+
+# Ignore keystore file
+android/app/*speakjar.jks
