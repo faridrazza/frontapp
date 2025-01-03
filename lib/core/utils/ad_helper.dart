@@ -3,7 +3,7 @@ import 'dart:io';
 class AdHelper {
   static String get bannerAdUnitId {
     if (Platform.isAndroid) {
-      return 'ca-app-pub-9842922624465296/1652552159';
+      return 'ca-app-pub-3940256099942544/6300978111';
     } else if (Platform.isIOS) {
       return 'ca-app-pub-3940256099942544/2934735716';
     } else {
@@ -13,9 +13,9 @@ class AdHelper {
 
   static String get interstitialAdUnitId {
     if (Platform.isAndroid) {
-      return "ca-app-pub-9842922624465296/1678099747";  // Replace with your actual ad unit ID
+      return 'ca-app-pub-3940256099942544/1033173712';
     } else if (Platform.isIOS) {
-      return "ca-app-pub-3940256099942544/4411468910";  // Replace with your actual ad unit ID
+      return 'ca-app-pub-3940256099942544/4411468910';
     } else {
       throw UnsupportedError("Unsupported platform");
     }
@@ -23,9 +23,9 @@ class AdHelper {
 
   static String get rewardedAdUnitId {
     if (Platform.isAndroid) {
-      return "ca-app-pub-3940256099942544/5224354917";
+      return 'ca-app-pub-3940256099942544/5224354917';
     } else if (Platform.isIOS) {
-      return "ca-app-pub-3940256099942544/1712485313";
+      return 'ca-app-pub-3940256099942544/1712485313';
     } else {
       throw new UnsupportedError("Unsupported platform");
     }
@@ -33,9 +33,9 @@ class AdHelper {
 
   static String get interstitialVideoAdUnitId {
     if (Platform.isAndroid) {
-      return "ca-app-pub-9842922624465296/5241940233"; // Test video interstitial ad unit ID for Android
+      return 'ca-app-pub-3940256099942544/8691691433';
     } else if (Platform.isIOS) {
-      return "ca-app-pub-3940256099942544/5135589807"; // Test video interstitial ad unit ID for iOS
+      return 'ca-app-pub-3940256099942544/5135589807';
     } else {
       throw UnsupportedError("Unsupported platform");
     }
@@ -43,9 +43,9 @@ class AdHelper {
 
   static String get largeBannerAdUnitId {
     if (Platform.isAndroid) {
-      return 'ca-app-pub-9842922624465296/1652552159'; // Replace with your actual ad unit ID
+      return 'ca-app-pub-3940256099942544/6300978111';
     } else if (Platform.isIOS) {
-      return 'ca-app-pub-3940256099942544/2934735716'; // Replace with your actual ad unit ID
+      return 'ca-app-pub-3940256099942544/2934735716';
     } else {
       throw UnsupportedError('Unsupported platform');
     }

@@ -12,7 +12,7 @@ class ApiService {
 
   // // Use this for local development
   // static const String _baseUrlDev = 'http://192.168.0.105:5000'; // Verify this IP and port
-  // // Use this for production (replace with your actual production URL when ready)
+  // Use this for production (replace with your actual production URL when ready)
   // static const String _baseUrlProd = 'https://your-deployed-backend.com';
 
   // Set this to true for production, false for local development
@@ -21,59 +21,92 @@ class ApiService {
   static String get _baseUrl => AppConfig.baseUrl;
 
   Future<Map<String, dynamic>> sendOtp(String countryCode, String phoneNumber) async {
+    _logger.i('📱 Initiating OTP send request');
+    _logger.d('Parameters - Country Code: $countryCode, Phone Number: $phoneNumber');
+
     // Ensure country code starts with '+' and is not longer than 4 characters
     if (!countryCode.startsWith('+')) {
       countryCode = '+$countryCode';
+      _logger.d('Added + to country code: $countryCode');
     }
     if (countryCode.length > 4) {
       countryCode = countryCode.substring(0, 4);
+      _logger.d('Trimmed country code to: $countryCode');
     }
 
     // Remove any non-digit characters from the phone number
-    phoneNumber = phoneNumber.replaceAll(RegExp(r'\D'), '');
+    String cleanPhoneNumber = phoneNumber.replaceAll(RegExp(r'\D'), '');
+    _logger.d('Cleaned phone number: $cleanPhoneNumber');
 
     try {
+      _logger.d('Making API request to: $_baseUrl/api/auth/send-otp');
       final response = await _dio.post(
         '$_baseUrl/api/auth/send-otp',
         data: {
           'countryCode': countryCode,
-          'phoneNumber': phoneNumber,
+          'phoneNumber': cleanPhoneNumber,
         },
       );
 
+      _logger.d('API Response Status Code: ${response.statusCode}');
+      _logger.d('API Response Data: ${response.data}');
+
       if (response.statusCode == 200) {
+        _logger.i('✅ OTP sent successfully');
         return response.data;
       } else {
+        _logger.e('❌ Failed to send OTP. Status code: ${response.statusCode}');
         throw Exception('Failed to send OTP');
       }
     } catch (e) {
+      _logger.e('❌ Error sending OTP', error: e);
       throw Exception('Error sending OTP: $e');
     }
   }
 
   Future<Map<String, dynamic>> verifyOtp(String countryCode, String phoneNumber, String otp) async {
+    _logger.i('🔐 Initiating OTP verification');
+    _logger.d('Parameters - Country Code: $countryCode, Phone Number: $phoneNumber, OTP: $otp');
+
     try {
-      final response = await _dio.post('$_baseUrl/api/auth/verify-otp', data: {
-        'countryCode': countryCode,
-        'phoneNumber': phoneNumber,
-        'otp': otp,
-      });
+      _logger.d('Making API request to: $_baseUrl/api/auth/verify-otp');
+      final response = await _dio.post(
+        '$_baseUrl/api/auth/verify-otp',
+        data: {
+          'countryCode': countryCode,
+          'phoneNumber': phoneNumber,
+          'otp': otp,
+        },
+      );
+
+      _logger.d('API Response Status Code: ${response.statusCode}');
+      _logger.d('API Response Data: ${response.data}');
 
       if (response.statusCode == 200) {
         final token = response.data['token'];
+        _logger.i('✅ OTP verified successfully');
+        _logger.d('Storing auth token');
         await _storage.write(key: 'auth_token', value: token);
         return response.data;
       } else {
+        _logger.e('❌ Failed to verify OTP. Status code: ${response.statusCode}');
         throw Exception('Failed to verify OTP');
       }
     } catch (e) {
+      _logger.e('❌ Error verifying OTP', error: e);
       throw Exception('Error verifying OTP: $e');
     }
   }
 
   Future<Map<String, dynamic>> completeProfile(String name, String email, String nativeLanguage) async {
+    _logger.i('👤 Initiating profile completion');
+    _logger.d('Parameters - Name: $name, Email: $email, Native Language: $nativeLanguage');
+
     try {
       final token = await _storage.read(key: 'auth_token');
+      _logger.d('Retrieved auth token: ${token?.substring(0, 10)}...');
+
+      _logger.d('Making API request to: $_baseUrl/api/auth/complete-profile');
       final response = await _dio.post(
         '$_baseUrl/api/auth/complete-profile',
         data: {
@@ -84,12 +117,18 @@ class ApiService {
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
+      _logger.d('API Response Status Code: ${response.statusCode}');
+      _logger.d('API Response Data: ${response.data}');
+
       if (response.statusCode == 200) {
+        _logger.i('✅ Profile completed successfully');
         return response.data;
       } else {
+        _logger.e('❌ Failed to complete profile. Status code: ${response.statusCode}');
         throw Exception('Failed to complete profile');
       }
     } catch (e) {
+      _logger.e('❌ Error completing profile', error: e);
       throw Exception('Error completing profile: $e');
     }
   }
