@@ -17,19 +17,108 @@ class InterviewScreen extends StatefulWidget {
   _InterviewScreenState createState() => _InterviewScreenState();
 }
 
-class _InterviewScreenState extends State<InterviewScreen> {
+class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final ScrollController _scrollController = ScrollController();
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _isListening = false;
+  bool _isMicAvailable = false;
+  late AnimationController _animationController;
+  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializeSpeech();
+    _initializeAnimations();
   }
 
-  void _initializeSpeech() async {
-    await _speech.initialize();
+  void _initializeAnimations() {
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 1000),
+    );
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+  }
+
+  Future<void> _initializeSpeech() async {
+    try {
+      final available = await _speech.initialize(
+        onStatus: (status) {
+          setState(() => _isListening = status == 'listening');
+          if (_isListening) {
+            _animationController.repeat(reverse: true);
+          } else {
+            _animationController.stop();
+            _animationController.reset();
+          }
+        },
+        onError: (error) => _showError('Microphone error: ${error.errorMsg}'),
+      );
+      setState(() => _isMicAvailable = available);
+    } catch (e) {
+      _showError('Failed to initialize microphone');
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
+  }
+
+  Future<void> _toggleListening() async {
+    if (_isListening) {
+      await _stopListening();
+    } else {
+      await _startListening();
+    }
+  }
+
+  Future<void> _startListening() async {
+    if (!_isMicAvailable) {
+      _showError('Microphone not available');
+      return;
+    }
+
+    try {
+      if (await _speech.initialize()) {
+        setState(() => _isListening = true);
+        await _speech.listen(
+          onResult: (result) {
+            if (result.finalResult) {
+              context.read<InterviewBloc>().add(
+                SendResponse(result.recognizedWords),
+              );
+              _stopListening();
+            }
+          },
+          listenFor: Duration(seconds: 30),
+          pauseFor: Duration(seconds: 6),
+          cancelOnError: true,
+          listenMode: stt.ListenMode.confirmation,
+        );
+      }
+    } catch (e) {
+      _showError('Error starting microphone');
+      _stopListening();
+    }
+  }
+
+  Future<void> _stopListening() async {
+    await _speech.stop();
+    setState(() => _isListening = false);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _stopListening();
+      AudioUtils.stopAudio();
+    }
   }
 
   void _scrollToBottom() {
@@ -180,52 +269,48 @@ class _InterviewScreenState extends State<InterviewScreen> {
         ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           GestureDetector(
-            onTapDown: (_) async {
-              if (!_isListening) {
-                bool available = await _speech.initialize();
-                if (available) {
-                  setState(() => _isListening = true);
-                  _speech.listen(
-                    onResult: (result) {
-                      if (result.finalResult) {
-                        context.read<InterviewBloc>().add(
-                          SendResponse(result.recognizedWords),
-                        );
-                        setState(() => _isListening = false);
-                      }
-                    },
-                  );
-                }
-              }
-            },
-            onTapUp: (_) {
-              if (_isListening) {
-                _speech.stop();
-                setState(() => _isListening = false);
-              }
-            },
-            child: Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _isListening ? Colors.red : Color(0xFFC8F235),
-                boxShadow: [
-                  BoxShadow(
-                    color: (_isListening ? Colors.red : Color(0xFFC8F235))
-                        .withOpacity(0.3),
-                    blurRadius: 10,
-                    spreadRadius: 2,
+            onTap: _toggleListening,
+            child: AnimatedBuilder(
+              animation: _pulseAnimation,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: _isListening ? _pulseAnimation.value : 1.0,
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _isListening ? Colors.red : Color(0xFFC8F235),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (_isListening ? Colors.red : Color(0xFFC8F235))
+                              .withOpacity(0.3),
+                          blurRadius: 10,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Icon(
+                          _isListening ? Icons.mic : Icons.mic_none,
+                          color: Colors.black,
+                          size: 30,
+                        ),
+                        if (_isListening)
+                          CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
-              child: Icon(
-                _isListening ? Icons.mic : Icons.mic_none,
-                color: Colors.black,
-              ),
+                );
+              },
             ),
           ),
         ],
@@ -235,7 +320,11 @@ class _InterviewScreenState extends State<InterviewScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _animationController.dispose();
+    _stopListening();
     _scrollController.dispose();
+    AudioUtils.stopAudio();
     super.dispose();
   }
 }
