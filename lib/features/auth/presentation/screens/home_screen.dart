@@ -20,6 +20,9 @@ import 'package:frontapp/features/learn_with_ai/presentation/screens/learn_with_
 import 'package:frontapp/features/learn_with_ai/presentation/bloc/learn_with_ai_bloc.dart';
 import 'package:connectivity_plus/connectivity_plus.dart'; // Ensure this import is present
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:frontapp/features/interview/presentation/screens/interview_screen.dart';
+import 'package:frontapp/features/interview/presentation/bloc/interview_bloc.dart';
+import 'package:frontapp/features/interview/domain/repositories/interview_repository.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isNewUser;
@@ -164,6 +167,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       childAspectRatio: 183 / 104,
                       children: [
                         _buildFeatureButton('Speak with AI', Color(0xFFC6F432), Icons.record_voice_over),
+                        _buildFeatureButton('Interview AI', Color(0xFF7B61FF), Icons.business),
                         _buildFeatureButton('Learn with AI', Color(0xFFC09FF8), Icons.school),
                         _buildFeatureButton('Role play ideas', Color(0xFFFFB341), Icons.lightbulb),
                         _buildFeatureButton('Rapid Sentence', Color(0xFFFEC4DD), Icons.qr_code),
@@ -226,6 +230,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
                 ),
                 child: SpeakWithAIScreen(),
+              ),
+            ),
+          );
+        } else if (label == 'Interview AI') {
+          await _adService.showInterstitialAd();
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BlocProvider(
+                create: (context) => InterviewBloc(
+                  repository: InterviewRepository(_apiService),
+                ),
+                child: InterviewScreen(),
               ),
             ),
           );
