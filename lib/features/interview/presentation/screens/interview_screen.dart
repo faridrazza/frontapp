@@ -210,6 +210,16 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
                 builder: (_) => InterviewFeedbackScreen(feedback: state.feedback),
               ),
             );
+          } else if (state is InterviewInProgress) {
+            if (state.session.messages.isNotEmpty) {
+              final latestMessage = state.session.messages.last;
+              if (latestMessage.isAI && latestMessage.audioBuffer != null) {
+                AudioUtils.playAudio(latestMessage.audioBuffer!);
+              }
+              Future.delayed(Duration(milliseconds: 100), () {
+                _scrollToBottom();
+              });
+            }
           }
         },
         builder: (context, state) {
