@@ -9,6 +9,7 @@ import '../../../../core/utils/audio_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'interview_feedback_screen.dart';
+import 'package:logger/logger.dart';
 
 class InterviewScreen extends StatefulWidget {
   const InterviewScreen({Key? key}) : super(key: key);
@@ -24,6 +25,7 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
   bool _isMicAvailable = false;
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
+  final Logger _logger = Logger();
 
   @override
   void initState() {
@@ -65,8 +67,14 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
   }
 
   void _showError(String message) {
+    if (!mounted) return;
+    
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 2),
+      ),
     );
   }
 
@@ -85,32 +93,62 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
     }
 
     try {
-      if (await _speech.initialize()) {
+      if (await _speech.initialize(
+        onStatus: (status) {
+          _logger.i('Speech recognition status: $status');
+          if (status == 'notListening') {
+            if (_isListening) {
+              _showError('No speech detected for a while');
+              _stopListening();
+            }
+          }
+          setState(() => _isListening = status == 'listening');
+          if (_isListening) {
+            _animationController.repeat(reverse: true);
+          } else {
+            _animationController.stop();
+            _animationController.reset();
+          }
+        },
+        onError: (error) {
+          if (error.errorMsg != 'No speech input') {
+            _showError('Microphone error: ${error.errorMsg}');
+          }
+        },
+      )) {
         setState(() => _isListening = true);
         await _speech.listen(
           onResult: (result) {
             if (result.finalResult) {
-              context.read<InterviewBloc>().add(
-                SendResponse(result.recognizedWords),
-              );
-              _stopListening();
+              if (result.recognizedWords.isNotEmpty) {
+                context.read<InterviewBloc>().add(
+                  SendResponse(result.recognizedWords),
+                );
+              }
             }
           },
-          listenFor: Duration(seconds: 30),
-          pauseFor: Duration(seconds: 6),
-          cancelOnError: true,
-          listenMode: stt.ListenMode.confirmation,
+          listenMode: stt.ListenMode.dictation,
+          pauseFor: Duration(seconds: 10),
+          partialResults: true,
+          cancelOnError: false,
+          localeId: 'en_US',
         );
       }
     } catch (e) {
+      _logger.e('Error starting microphone: $e');
       _showError('Error starting microphone');
       _stopListening();
     }
   }
 
   Future<void> _stopListening() async {
-    await _speech.stop();
-    setState(() => _isListening = false);
+    try {
+      await _speech.stop();
+      setState(() => _isListening = false);
+    } catch (e) {
+      _logger.e('Error stopping microphone: $e');
+      _showError('Error stopping microphone');
+    }
   }
 
   @override
