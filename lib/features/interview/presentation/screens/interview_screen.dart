@@ -26,6 +26,7 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
   final Logger _logger = Logger();
+  bool _isAudioPlaying = false;
 
   @override
   void initState() {
@@ -151,6 +152,23 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
     }
   }
 
+  Future<void> _playAudio(String audioBuffer) async {
+    if (_isAudioPlaying) {
+      await AudioUtils.stopAudio();
+      setState(() => _isAudioPlaying = false);
+      return;
+    }
+    
+    setState(() => _isAudioPlaying = true);
+    try {
+      await AudioUtils.playAudio(audioBuffer);
+    } finally {
+      if (mounted) {
+        setState(() => _isAudioPlaying = false);
+      }
+    }
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) {
@@ -261,8 +279,9 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
                       final message = state.session.messages[index];
                       return InterviewMessageBubble(
                         message: message,
+                        isPlaying: _isAudioPlaying,
                         onPlayAudio: message.audioBuffer != null
-                            ? () => AudioUtils.playAudio(message.audioBuffer!)
+                            ? () => _playAudio(message.audioBuffer!)
                             : null,
                       );
                     },

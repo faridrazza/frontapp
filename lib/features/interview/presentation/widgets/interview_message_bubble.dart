@@ -5,10 +5,12 @@ import 'package:google_fonts/google_fonts.dart';
 class InterviewMessageBubble extends StatelessWidget {
   final InterviewMessage message;
   final VoidCallback? onPlayAudio;
+  final bool isPlaying;
 
   const InterviewMessageBubble({
     Key? key,
     required this.message,
+    required this.isPlaying,
     this.onPlayAudio,
   }) : super(key: key);
 
@@ -37,7 +39,9 @@ class InterviewMessageBubble extends StatelessWidget {
             ),
           ],
         ),
-        child: Stack(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
               padding: EdgeInsets.all(12),
@@ -50,22 +54,26 @@ class InterviewMessageBubble extends StatelessWidget {
               ),
             ),
             if (message.isAI && message.audioBuffer != null)
-              Positioned(
-                top: 8,
-                right: 8,
-                child: GestureDetector(
-                  onTap: onPlayAudio,
-                  child: Container(
-                    padding: EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      shape: BoxShape.circle,
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.only(bottom: 8, left: 8, right: 8),
+                child: ElevatedButton.icon(
+                  onPressed: isPlaying ? null : onPlayAudio,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(
-                      Icons.volume_up,
-                      color: Colors.white,
-                      size: 16,
-                    ),
+                  ),
+                  icon: Icon(
+                    isPlaying ? Icons.pause : Icons.play_arrow,
+                    size: 20,
+                  ),
+                  label: Text(
+                    isPlaying ? 'Playing...' : 'Play Audio',
+                    style: GoogleFonts.inter(fontSize: 14),
                   ),
                 ),
               ),
