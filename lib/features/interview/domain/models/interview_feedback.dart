@@ -50,20 +50,14 @@ class TechnicalAssessment {
 }
 
 class CommunicationAssessment {
-  final double clarityScore;
-  final double confidenceScore;
   final List<String> improvements;
 
   CommunicationAssessment({
-    required this.clarityScore,
-    required this.confidenceScore,
     required this.improvements,
   });
 
   factory CommunicationAssessment.fromJson(Map<String, dynamic> json) {
     return CommunicationAssessment(
-      clarityScore: json['clarityScore']?.toDouble() ?? 0.0,
-      confidenceScore: json['confidenceScore']?.toDouble() ?? 0.0,
       improvements: List<String>.from(json['improvements'] ?? []),
     );
   }

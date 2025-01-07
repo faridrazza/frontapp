@@ -394,9 +394,14 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> startInterview(String role, String experienceLevel) async {
-    _logger.i('Starting interview - Role: $role, Experience: $experienceLevel');
+    _logger.i('📝 Starting interview session');
+    _logger.d('Parameters - Role: $role, Experience Level: $experienceLevel');
+
     try {
       final token = await _storage.read(key: 'auth_token');
+      _logger.d('Making API request to: $_baseUrl/api/interview/start');
+      _logger.d('Request payload: { role: $role, experienceLevel: $experienceLevel }');
+
       final response = await _dio.post(
         '$_baseUrl/api/interview/start',
         data: {
@@ -406,27 +411,36 @@ class ApiService {
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
+      _logger.d('API Response Status Code: ${response.statusCode}');
+      _logger.d('API Response Data: ${response.data}');
+
       if (response.statusCode == 200) {
-        _logger.i('Interview started successfully');
+        _logger.i('✅ Interview started successfully');
         return {
           'sessionId': response.data['sessionId'],
           'message': response.data['message'],
           'audio': response.data['audio'],
         };
       } else {
-        _logger.e('Failed to start interview: ${response.statusCode}');
+        _logger.e('❌ Failed to start interview: ${response.statusCode}');
         throw Exception('Failed to start interview');
       }
     } catch (e) {
-      _logger.e('Error starting interview', error: e);
+      _logger.e('❌ Error starting interview', error: e);
       throw Exception('Error starting interview: $e');
     }
   }
 
   Future<Map<String, dynamic>> sendInterviewResponse(String sessionId, String userResponse) async {
-    _logger.i('Sending interview response - SessionId: $sessionId');
+    _logger.i('🗣️ Sending interview response');
+    _logger.d('Parameters - SessionId: $sessionId');
+    _logger.d('User Response: $userResponse');
+
     try {
       final token = await _storage.read(key: 'auth_token');
+      _logger.d('Making API request to: $_baseUrl/api/interview/respond');
+      _logger.d('Request payload: { sessionId: $sessionId, userResponse: $userResponse }');
+
       final response = await _dio.post(
         '$_baseUrl/api/interview/respond',
         data: {
@@ -436,48 +450,62 @@ class ApiService {
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
+      _logger.d('API Response Status Code: ${response.statusCode}');
+      _logger.d('API Response Data: ${response.data}');
+
       if (response.statusCode == 200) {
-        _logger.i('Response sent successfully');
+        _logger.i('✅ Response sent successfully');
         return {
           'message': response.data['message'],
           'audio': response.data['audio'],
         };
       } else {
-        _logger.e('Failed to send response: ${response.statusCode}');
+        _logger.e('❌ Failed to send response: ${response.statusCode}');
         throw Exception('Failed to send interview response');
       }
     } catch (e) {
-      _logger.e('Error sending interview response', error: e);
+      _logger.e('❌ Error sending interview response', error: e);
       throw Exception('Error sending interview response: $e');
     }
   }
 
   Future<Map<String, dynamic>> endInterview(String sessionId) async {
-    _logger.i('Ending interview - SessionId: $sessionId');
+    _logger.i('🏁 Ending interview session');
+    _logger.d('Parameters - SessionId: $sessionId');
+
     try {
       final token = await _storage.read(key: 'auth_token');
+      _logger.d('Making API request to: $_baseUrl/api/interview/end');
+      _logger.d('Request payload: { sessionId: $sessionId }');
+
       final response = await _dio.post(
         '$_baseUrl/api/interview/end',
         data: {'sessionId': sessionId},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
+      _logger.d('API Response Status Code: ${response.statusCode}');
+      _logger.d('API Response Data: ${response.data}');
+
       if (response.statusCode == 200) {
-        _logger.i('Interview ended successfully');
+        _logger.i('✅ Interview ended successfully');
         final feedbackString = response.data['feedback'];
         if (feedbackString == null) {
+          _logger.e('❌ No feedback received from server');
           throw Exception('No feedback received from server');
         }
         
-        // Parse the feedback string into structured data
+        _logger.d('Raw feedback string: $feedbackString');
         final parsedFeedback = FeedbackParser.parseFeedbackString(feedbackString);
+        _logger.d('Parsed feedback: $parsedFeedback');
+        
         return parsedFeedback;
       } else {
-        _logger.e('Failed to end interview: ${response.statusCode}');
+        _logger.e('❌ Failed to end interview: ${response.statusCode}');
         throw Exception('Failed to end interview');
       }
     } catch (e) {
-      _logger.e('Error ending interview', error: e);
+      _logger.e('❌ Error ending interview', error: e);
       throw Exception('Error ending interview: $e');
     }
   }

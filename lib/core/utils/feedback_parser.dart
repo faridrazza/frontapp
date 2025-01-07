@@ -9,11 +9,8 @@ class FeedbackParser {
         'technicalKnowledge': {
           'isAdequate': false,
           'missingConcepts': <String>[],
-          'learningResources': <String>[],
         },
         'communicationSkills': {
-          'clarityScore': 0.0,
-          'confidenceScore': 0.0,
           'improvements': <String>[],
         },
       };
@@ -54,17 +51,13 @@ class FeedbackParser {
         parsedFeedback['technicalKnowledge'] = {
           'isAdequate': parsedFeedback['overallScore'] >= 70,
           'missingConcepts': technicalPoints.skip(1).toList(),
-          'learningResources': <String>[],
         };
       }
 
       // Parse communication skills
       final communicationPoints = extractItems(feedbackString, communicationRegex);
       if (communicationPoints.isNotEmpty) {
-        final score = parsedFeedback['overallScore'] as double;
         parsedFeedback['communicationSkills'] = {
-          'clarityScore': score * 0.8,
-          'confidenceScore': score * 0.8,
           'improvements': communicationPoints,
         };
       }

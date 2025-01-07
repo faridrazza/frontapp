@@ -129,27 +129,29 @@ class InterviewFeedbackScreen extends StatelessWidget {
       Icons.star_outline,
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: feedback.strengths.map((strength) {
-          return Padding(
-            padding: EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              children: [
-                Icon(Icons.check_circle_outline,
-                    color: Color(0xFFC8F235), size: 20),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    strength,
-                    style: GoogleFonts.inter(
-                      color: Colors.white,
-                      fontSize: 16,
+        children: [
+          ...feedback.strengths.map((strength) {
+            return Padding(
+              padding: EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Icon(Icons.check_circle_outline,
+                      color: Color(0xFFC8F235), size: 20),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      strength,
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
       ),
     );
   }
@@ -160,27 +162,29 @@ class InterviewFeedbackScreen extends StatelessWidget {
       Icons.trending_up,
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: feedback.areasForImprovement.map((area) {
-          return Padding(
-            padding: EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              children: [
-                Icon(Icons.arrow_right,
-                    color: Colors.orange[300], size: 20),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    area,
-                    style: GoogleFonts.inter(
-                      color: Colors.white,
-                      fontSize: 16,
+        children: [
+          ...feedback.areasForImprovement.map((area) {
+            return Padding(
+              padding: EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Icon(Icons.arrow_right,
+                      color: Colors.orange[300], size: 20),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      area,
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
       ),
     );
   }
@@ -203,20 +207,23 @@ class InterviewFeedbackScreen extends StatelessWidget {
                     : Colors.orange[300],
               ),
               SizedBox(width: 8),
-              Text(
-                feedback.technicalKnowledge.isAdequate
-                    ? 'Adequate Technical Knowledge'
-                    : 'Needs Technical Improvement',
-                style: GoogleFonts.inter(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  feedback.technicalKnowledge.isAdequate
+                      ? 'Adequate Technical Knowledge'
+                      : 'Needs Technical Improvement',
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
           ),
           SizedBox(height: 16),
           if (feedback.technicalKnowledge.missingConcepts.isNotEmpty) ...[
+            SizedBox(height: 16),
             Text(
               'Areas to Review:',
               style: GoogleFonts.inter(
@@ -259,30 +266,27 @@ class InterviewFeedbackScreen extends StatelessWidget {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildSkillScore('Clarity', feedback.communicationSkills.clarityScore),
-              _buildSkillScore('Confidence', feedback.communicationSkills.confidenceScore),
-            ],
-          ),
-          SizedBox(height: 16),
           if (feedback.communicationSkills.improvements.isNotEmpty) ...[
             Text(
-              'Suggestions for Improvement:',
+              'Areas to Focus On:',
               style: GoogleFonts.inter(
                 color: Colors.grey[400],
                 fontSize: 14,
+                fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: 12),
             ...feedback.communicationSkills.improvements.map((improvement) {
               return Padding(
                 padding: EdgeInsets.symmetric(vertical: 4),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.lightbulb_outline,
-                        color: Color(0xFFC8F235), size: 20),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Icon(Icons.arrow_right,
+                          color: Color(0xFFC8F235), size: 20),
+                    ),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -300,35 +304,6 @@ class InterviewFeedbackScreen extends StatelessWidget {
           ],
         ],
       ),
-    );
-  }
-
-  Widget _buildSkillScore(String label, double score) {
-    return Column(
-      children: [
-        CircularPercentIndicator(
-          radius: 40,
-          lineWidth: 8,
-          percent: score / 100,
-          center: Text(
-            '${score.round()}%',
-            style: GoogleFonts.inter(
-              color: Color(0xFFC8F235),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          progressColor: Color(0xFFC8F235),
-          backgroundColor: Colors.grey[800]!,
-        ),
-        SizedBox(height: 8),
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            color: Colors.white,
-            fontSize: 14,
-          ),
-        ),
-      ],
     );
   }
 
