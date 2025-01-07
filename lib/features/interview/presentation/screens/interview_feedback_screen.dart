@@ -57,12 +57,6 @@ class InterviewFeedbackScreen extends StatelessWidget {
               _buildSummaryCard(),
               SizedBox(height: 24),
               _buildStrengthsCard(),
-              SizedBox(height: 24),
-              _buildImprovementCard(),
-              SizedBox(height: 24),
-              _buildTechnicalAssessment(),
-              SizedBox(height: 24),
-              _buildCommunicationSkills(),
             ],
           ),
         ),
@@ -125,7 +119,7 @@ class InterviewFeedbackScreen extends StatelessWidget {
 
   Widget _buildStrengthsCard() {
     return _buildCard(
-      'Key Strengths',
+      'Detail Feedback',
       Icons.star_outline,
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -134,10 +128,15 @@ class InterviewFeedbackScreen extends StatelessWidget {
             return Padding(
               padding: EdgeInsets.symmetric(vertical: 4),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.check_circle_outline,
-                      color: Color(0xFFC8F235), size: 20),
-                  SizedBox(width: 8),
+                  Text(
+                    '- ',
+                    style: GoogleFonts.inter(
+                      color: Color(0xFFC8F235),
+                      fontSize: 16,
+                    ),
+                  ),
                   Expanded(
                     child: Text(
                       strength,
@@ -151,157 +150,6 @@ class InterviewFeedbackScreen extends StatelessWidget {
               ),
             );
           }).toList(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildImprovementCard() {
-    return _buildCard(
-      'Areas for Improvement',
-      Icons.trending_up,
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ...feedback.areasForImprovement.map((area) {
-            return Padding(
-              padding: EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  Icon(Icons.arrow_right,
-                      color: Colors.orange[300], size: 20),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      area,
-                      style: GoogleFonts.inter(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTechnicalAssessment() {
-    return _buildCard(
-      'Technical Knowledge',
-      Icons.code,
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                feedback.technicalKnowledge.isAdequate
-                    ? Icons.check_circle_outline
-                    : Icons.warning_amber_outlined,
-                color: feedback.technicalKnowledge.isAdequate
-                    ? Color(0xFFC8F235)
-                    : Colors.orange[300],
-              ),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  feedback.technicalKnowledge.isAdequate
-                      ? 'Adequate Technical Knowledge'
-                      : 'Needs Technical Improvement',
-                  style: GoogleFonts.inter(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 16),
-          if (feedback.technicalKnowledge.missingConcepts.isNotEmpty) ...[
-            SizedBox(height: 16),
-            Text(
-              'Areas to Review:',
-              style: GoogleFonts.inter(
-                color: Colors.grey[400],
-                fontSize: 14,
-              ),
-            ),
-            SizedBox(height: 8),
-            ...feedback.technicalKnowledge.missingConcepts.map((concept) {
-              return Padding(
-                padding: EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    Icon(Icons.circle,
-                        color: Colors.orange[300], size: 8),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        concept,
-                        style: GoogleFonts.inter(
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCommunicationSkills() {
-    return _buildCard(
-      'Communication Skills',
-      Icons.record_voice_over_outlined,
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (feedback.communicationSkills.improvements.isNotEmpty) ...[
-            Text(
-              'Areas to Focus On:',
-              style: GoogleFonts.inter(
-                color: Colors.grey[400],
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 12),
-            ...feedback.communicationSkills.improvements.map((improvement) {
-              return Padding(
-                padding: EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Icon(Icons.arrow_right,
-                          color: Color(0xFFC8F235), size: 20),
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        improvement,
-                        style: GoogleFonts.inter(
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ],
         ],
       ),
     );
