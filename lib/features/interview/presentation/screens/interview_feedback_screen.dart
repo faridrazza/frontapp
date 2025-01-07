@@ -10,36 +10,61 @@ class InterviewFeedbackScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: Scaffold(
         backgroundColor: Colors.black,
-        title: Text(
-          'Interview Feedback',
-          style: GoogleFonts.inter(
-            color: Color(0xFFC8F235),
-            fontWeight: FontWeight.bold,
+        appBar: AppBar(
+          backgroundColor: Colors.black,
+          automaticallyImplyLeading: false,
+          title: Text(
+            'Interview Feedback',
+            style: GoogleFonts.inter(
+              color: Color(0xFFC8F235),
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildOverallScore(),
-            SizedBox(height: 24),
-            _buildSummaryCard(),
-            SizedBox(height: 24),
-            _buildStrengthsCard(),
-            SizedBox(height: 24),
-            _buildImprovementCard(),
-            SizedBox(height: 24),
-            _buildTechnicalAssessment(),
-            SizedBox(height: 24),
-            _buildCommunicationSkills(),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: TextButton(
+                onPressed: () {
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    '/',
+                    (route) => false,
+                  );
+                },
+                child: Text(
+                  'End',
+                  style: GoogleFonts.inter(
+                    color: Color(0xFFC8F235),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ),
           ],
+          elevation: 0,
+        ),
+        body: SingleChildScrollView(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildOverallScore(),
+              SizedBox(height: 24),
+              _buildSummaryCard(),
+              SizedBox(height: 24),
+              _buildStrengthsCard(),
+              SizedBox(height: 24),
+              _buildImprovementCard(),
+              SizedBox(height: 24),
+              _buildTechnicalAssessment(),
+              SizedBox(height: 24),
+              _buildCommunicationSkills(),
+            ],
+          ),
         ),
       ),
     );

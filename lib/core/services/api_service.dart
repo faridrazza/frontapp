@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logger/logger.dart';
 import 'package:frontapp/core/config/app_config.dart';
+import 'package:frontapp/core/utils/feedback_parser.dart';
 
 class ApiService {
   final Dio _dio = Dio();
@@ -463,7 +464,14 @@ class ApiService {
 
       if (response.statusCode == 200) {
         _logger.i('Interview ended successfully');
-        return {'feedback': response.data['feedback']};
+        final feedbackString = response.data['feedback'];
+        if (feedbackString == null) {
+          throw Exception('No feedback received from server');
+        }
+        
+        // Parse the feedback string into structured data
+        final parsedFeedback = FeedbackParser.parseFeedbackString(feedbackString);
+        return parsedFeedback;
       } else {
         _logger.e('Failed to end interview: ${response.statusCode}');
         throw Exception('Failed to end interview');

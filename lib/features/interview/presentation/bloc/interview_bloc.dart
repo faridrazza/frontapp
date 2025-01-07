@@ -97,10 +97,15 @@ class InterviewBloc extends Bloc<InterviewEvent, InterviewState> {
 
       try {
         final feedback = await repository.endInterview(currentState.session.sessionId);
-        emit(InterviewCompleted(
-          feedback: feedback,
-          session: currentState.session.copyWith(isCompleted: true),
-        ));
+        
+        if (feedback != null) {
+          emit(InterviewCompleted(
+            feedback: feedback,
+            session: currentState.session.copyWith(isCompleted: true),
+          ));
+        } else {
+          throw Exception('No feedback received');
+        }
       } catch (e) {
         _logger.e('Error ending interview: $e');
         emit(InterviewError(e.toString()));

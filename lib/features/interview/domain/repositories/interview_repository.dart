@@ -1,6 +1,7 @@
 import 'package:frontapp/core/services/api_service.dart';
 import '../models/interview_feedback.dart';
 import 'package:logger/logger.dart';
+import '../../../../core/utils/feedback_parser.dart';
 
 class InterviewRepository {
   final ApiService _apiService;
@@ -37,7 +38,8 @@ class InterviewRepository {
     try {
       final response = await _apiService.endInterview(sessionId);
       _logger.i('Interview ended successfully');
-      return InterviewFeedback.fromJson(response['feedback']);
+      
+      return InterviewFeedback.fromJson(response);
     } catch (e) {
       _logger.e('Error ending interview: $e');
       throw Exception('Failed to end interview: $e');
