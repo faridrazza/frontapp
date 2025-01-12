@@ -665,4 +665,34 @@ class ApiService {
     await _storage.delete(key: 'auth_token');
     _dio.options.headers.remove('Authorization');
   }
+
+  Future<Map<String, dynamic>> updateNativeLanguage(String nativeLanguage) async {
+    _logger.i('🌍 Initiating native language update');
+    _logger.d('New language: $nativeLanguage');
+
+    try {
+      final token = await _storage.read(key: 'auth_token');
+      _logger.d('Making API request to: $_baseUrl/api/auth/update-language');
+      
+      final response = await _dio.patch(
+        '$_baseUrl/api/auth/update-language',
+        data: {'nativeLanguage': nativeLanguage},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      _logger.d('API Response Status Code: ${response.statusCode}');
+      _logger.d('API Response Data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        _logger.i('✅ Native language updated successfully');
+        return response.data;
+      } else {
+        _logger.e('❌ Failed to update native language. Status code: ${response.statusCode}');
+        throw Exception('Failed to update native language');
+      }
+    } catch (e) {
+      _logger.e('❌ Error updating native language', error: e);
+      throw Exception('Error updating native language: $e');
+    }
+  }
 }

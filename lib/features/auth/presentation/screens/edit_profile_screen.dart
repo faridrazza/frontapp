@@ -13,25 +13,43 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nameController;
-  late TextEditingController _phoneController;
   late TextEditingController _nativeLanguageController;
   final ApiService _apiService = ApiService();
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.userProfile['name']);
-    _phoneController = TextEditingController(text: widget.userProfile['phoneNumber']);
     _nativeLanguageController = TextEditingController(text: widget.userProfile['nativeLanguage']);
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _phoneController.dispose();
     _nativeLanguageController.dispose();
     super.dispose();
+  }
+
+  void _saveChanges() async {
+    if (_formKey.currentState!.validate()) {
+      try {
+        final updatedProfile = await _apiService.updateNativeLanguage(
+          _nativeLanguageController.text.trim(),
+        );
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Language updated successfully')),
+        );
+        
+        setState(() {
+          widget.userProfile['nativeLanguage'] = updatedProfile['nativeLanguage'];
+        });
+        
+        Navigator.of(context).pop();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update language: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -41,7 +59,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         title: Text(
-          'Edit Profile',
+          'Edit Language',
           style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
@@ -58,17 +76,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildTextField('Name', _nameController),
-                  SizedBox(height: 16),
-                  _buildTextField('Phone number', _phoneController),
-                  SizedBox(height: 16),
                   _buildTextField('Native Language', _nativeLanguageController),
                   SizedBox(height: 32),
                   ElevatedButton(
                     onPressed: _saveChanges,
                     child: Text('Save changes', style: TextStyle(color: Colors.black)),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFFC6F432), // Changed from primary to backgroundColor
+                      backgroundColor: Color(0xFFC6F432),
                       minimumSize: Size(double.infinity, 50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -116,29 +130,5 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         return null;
       },
     );
-  }
-
-  void _saveChanges() async {
-    if (_formKey.currentState!.validate()) {
-      try {
-        final updatedProfile = await _apiService.updateProfile(
-          name: _nameController.text,
-          phoneNumber: _phoneController.text,
-          nativeLanguage: _nativeLanguageController.text,
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Profile updated successfully')),
-        );
-        setState(() {
-          widget.userProfile['name'] = updatedProfile['name'];
-          widget.userProfile['phoneNumber'] = updatedProfile['phoneNumber'];
-          widget.userProfile['nativeLanguage'] = updatedProfile['nativeLanguage'];
-        });
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update profile: $e')),
-        );
-      }
-    }
   }
 }
