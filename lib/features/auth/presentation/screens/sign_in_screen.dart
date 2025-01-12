@@ -6,6 +6,7 @@ import 'package:frontapp/features/auth/presentation/widgets/social_login_button.
 import 'package:frontapp/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:frontapp/features/auth/presentation/screens/home_screen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:frontapp/features/auth/presentation/screens/forgot_password_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({Key? key}) : super(key: key);
@@ -257,6 +258,23 @@ class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderSt
                           ),
                         ),
                       ],
+                    ),
+
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ForgotPasswordScreen(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        'Forgot Password?',
+                        style: GoogleFonts.inter(
+                          color: Color(0xFFC6F432),
+                        ),
+                      ),
                     ),
                   ],
                 ),

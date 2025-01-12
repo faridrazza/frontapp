@@ -695,4 +695,60 @@ class ApiService {
       throw Exception('Error updating native language: $e');
     }
   }
+
+  Future<Map<String, dynamic>> requestPasswordReset(String email) async {
+    _logger.i('📧 Initiating password reset request');
+    _logger.d('Email: $email');
+
+    try {
+      _logger.d('Making API request to: $_baseUrl/api/auth/forgot-password');
+      final response = await _dio.post(
+        '$_baseUrl/api/auth/forgot-password',
+        data: {'email': email},
+      );
+
+      _logger.d('API Response Status Code: ${response.statusCode}');
+      _logger.d('API Response Data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        _logger.i('✅ Password reset request sent successfully');
+        return response.data;
+      } else {
+        _logger.e('❌ Failed to send password reset request. Status code: ${response.statusCode}');
+        throw Exception('Failed to send password reset request');
+      }
+    } catch (e) {
+      _logger.e('❌ Error requesting password reset', error: e);
+      throw Exception('Error requesting password reset: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> resetPassword(String password, String token) async {
+    _logger.i('🔐 Initiating password reset');
+    
+    try {
+      _logger.d('Making API request to: $_baseUrl/api/auth/reset-password');
+      final response = await _dio.post(
+        '$_baseUrl/api/auth/reset-password',
+        data: {
+          'password': password,
+          'token': token, // Token from URL query parameter
+        },
+      );
+
+      _logger.d('API Response Status Code: ${response.statusCode}');
+      _logger.d('API Response Data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        _logger.i('✅ Password reset successful');
+        return response.data;
+      } else {
+        _logger.e('❌ Failed to reset password. Status code: ${response.statusCode}');
+        throw Exception('Failed to reset password');
+      }
+    } catch (e) {
+      _logger.e('❌ Error resetting password', error: e);
+      throw Exception('Error resetting password: $e');
+    }
+  }
 }
