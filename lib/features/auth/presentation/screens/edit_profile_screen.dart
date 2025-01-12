@@ -19,7 +19,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _nativeLanguageController = TextEditingController(text: widget.userProfile['nativeLanguage']);
+    final nativeLanguage = widget.userProfile['user']?['nativeLanguage']?.toString().trim() ?? '';
+    print('Initializing native language field with: $nativeLanguage');
+    _nativeLanguageController = TextEditingController(text: nativeLanguage);
   }
 
   @override
@@ -39,15 +41,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           SnackBar(content: Text('Language updated successfully')),
         );
         
-        setState(() {
-          widget.userProfile['nativeLanguage'] = updatedProfile['nativeLanguage'];
-        });
-        
-        Navigator.of(context).pop();
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update language: $e')),
-        );
+        print('Error updating language: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to update language: $e')),
+          );
+        }
       }
     }
   }
