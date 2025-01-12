@@ -150,19 +150,33 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> getProfile() async {
+    _logger.i('👤 Initiating profile fetch');
+    
     try {
       final token = await _storage.read(key: 'auth_token');
+      _logger.d('Retrieved auth token: ${token?.substring(0, 10)}...'); // Only log first 10 chars of token for security
+      
+      _logger.d('Making API request to: $_baseUrl/api/auth/me');
       final response = await _dio.get(
         '$_baseUrl/api/auth/me',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
+      _logger.d('API Response Status Code: ${response.statusCode}');
+      _logger.d('API Response Data: ${response.data}');
+
       if (response.statusCode == 200) {
+        _logger.i('✅ Profile fetched successfully');
         return response.data;
       } else {
+        _logger.e('❌ Failed to fetch profile. Status code: ${response.statusCode}');
         throw Exception('Failed to fetch profile');
       }
     } catch (e) {
+      _logger.e('❌ Error fetching profile', error: e);
+      if (e.toString().contains('401')) {
+        _logger.w('⚠️ Authentication token might be expired or invalid');
+      }
       throw Exception('Error fetching profile: $e');
     }
   }
@@ -508,5 +522,147 @@ class ApiService {
       _logger.e('❌ Error ending interview', error: e);
       throw Exception('Error ending interview: $e');
     }
+  }
+
+  Future<Map<String, dynamic>> signUp({
+    required String email,
+    required String password,
+    required String name,
+    required String nativeLanguage,
+  }) async {
+    _logger.i('📝 Initiating sign up process');
+    _logger.d('Sign up parameters - Email: $email, Name: $name, Native Language: $nativeLanguage');
+    
+    try {
+      _logger.d('Making API request to: $_baseUrl/api/auth/signup');
+      _logger.d('Request payload: { email: $email, name: $name, nativeLanguage: $nativeLanguage }');
+
+      final response = await _dio.post(
+        '$_baseUrl/api/auth/signup',
+        data: {
+          'email': email,
+          'password': password,
+          'name': name,
+          'nativeLanguage': nativeLanguage,
+        },
+      );
+
+      _logger.d('API Response Status Code: ${response.statusCode}');
+      _logger.d('API Response Data: ${response.data}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        _logger.i('✅ Sign up successful');
+        final token = response.data['token'];
+        
+        if (token != null) {
+          _logger.d('Token received, storing in secure storage');
+          await _storage.write(key: 'auth_token', value: token);
+          _logger.d('Setting up authorization header for future requests');
+          _dio.options.headers['Authorization'] = 'Bearer $token';
+        } else {
+          _logger.w('⚠️ No token received in sign up response');
+        }
+        
+        return response.data;
+      } else {
+        _logger.e('❌ Sign up failed with status code: ${response.statusCode}');
+        throw Exception('Failed to sign up');
+      }
+    } catch (e) {
+      _logger.e('❌ Error during sign up', error: e);
+      throw Exception('Error during sign up: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> signIn({
+    required String email,
+    required String password,
+  }) async {
+    _logger.i('🔐 Initiating sign in process');
+    _logger.d('Sign in parameters - Email: $email');
+    
+    try {
+      _logger.d('Making API request to: $_baseUrl/api/auth/signin');
+      _logger.d('Request payload: { email: $email }');
+
+      final response = await _dio.post(
+        '$_baseUrl/api/auth/signin',
+        data: {
+          'email': email,
+          'password': password,
+        },
+      );
+
+      _logger.d('API Response Status Code: ${response.statusCode}');
+      _logger.d('API Response Data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        _logger.i('✅ Sign in successful');
+        final token = response.data['token'];
+        
+        if (token != null) {
+          _logger.d('Token received, storing in secure storage');
+          await _storage.write(key: 'auth_token', value: token);
+          _logger.d('Setting up authorization header for future requests');
+          _dio.options.headers['Authorization'] = 'Bearer $token';
+        } else {
+          _logger.w('⚠️ No token received in sign in response');
+        }
+        
+        return response.data;
+      } else {
+        _logger.e('❌ Sign in failed with status code: ${response.statusCode}');
+        throw Exception('Failed to sign in');
+      }
+    } catch (e) {
+      _logger.e('❌ Error during sign in', error: e);
+      throw Exception('Error during sign in: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> socialSignIn({
+    required String provider,
+    String? nativeLanguage,
+  }) async {
+    _logger.i('🔑 Initiating social sign in');
+    _logger.d('Parameters - Provider: $provider, Native Language: $nativeLanguage');
+
+    try {
+      final response = await _dio.post(
+        '$_baseUrl/api/auth/social-signin',
+        data: {
+          'provider': provider,
+          'nativeLanguage': nativeLanguage,
+        },
+      );
+
+      _logger.d('API Response Status Code: ${response.statusCode}');
+      _logger.d('API Response Data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        _logger.i('✅ Social sign in successful');
+        return response.data;
+      } else {
+        _logger.e('❌ Social sign in failed. Status code: ${response.statusCode}');
+        throw Exception('Failed to sign in with $provider');
+      }
+    } catch (e) {
+      _logger.e('❌ Error during social sign in', error: e);
+      throw Exception('Error during social sign in: $e');
+    }
+  }
+
+  // Add a method to initialize the API service with stored token
+  Future<void> initializeToken() async {
+    final token = await _storage.read(key: 'auth_token');
+    if (token != null) {
+      _dio.options.headers['Authorization'] = 'Bearer $token';
+    }
+  }
+
+  // Add a method to clear the token (for logout)
+  Future<void> clearToken() async {
+    await _storage.delete(key: 'auth_token');
+    _dio.options.headers.remove('Authorization');
   }
 }

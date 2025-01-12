@@ -23,6 +23,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontapp/features/interview/presentation/screens/interview_screen.dart';
 import 'package:frontapp/features/interview/presentation/bloc/interview_bloc.dart';
 import 'package:frontapp/features/interview/domain/repositories/interview_repository.dart';
+import 'package:logger/logger.dart';
+import 'package:frontapp/features/auth/presentation/screens/sign_in_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isNewUser;
@@ -35,6 +37,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final ApiService _apiService = ApiService();
+  final Logger _logger = Logger();
   String _userName = '';
   final AdService _adService = AdService();
   late Stream<List<ConnectivityResult>> _connectivityStream; // Change to List
@@ -83,11 +86,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _fetchUserProfile() async {
     try {
       final profile = await _apiService.getProfile();
-      setState(() {
-        _userName = profile['name'] ?? 'User';
-      });
+      _logger.d('Received profile data in HomeScreen: $profile');
+      
+      if (mounted) {
+        setState(() {
+          // Access the nested 'name' field inside the 'user' object
+          _userName = profile['user']?['name']?.toString().trim() ?? 'User';
+          _logger.i('Updated username to: $_userName');
+        });
+      }
     } catch (e) {
-      print('Error fetching user profile: $e');
+      _logger.e('Error fetching user profile: $e');
+      if (e.toString().contains('401')) {
+        await _apiService.clearToken();
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const SignInScreen()),
+            (route) => false,
+          );
+        }
+      }
     }
   }
 

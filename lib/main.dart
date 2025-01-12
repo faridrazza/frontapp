@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontapp/core/theme/app_theme.dart';
-import 'package:frontapp/features/auth/presentation/screens/phone_entry_screen.dart';
+import 'package:frontapp/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:frontapp/features/auth/presentation/screens/home_screen.dart';
 import 'package:frontapp/core/services/api_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -10,6 +10,11 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await MobileAds.instance.initialize();
+  
+  // Initialize API service with stored token
+  final apiService = ApiService();
+  await apiService.initializeToken();
+  
   runApp(const MyApp());
 }
 
@@ -22,6 +27,7 @@ class MyApp extends StatelessWidget {
       title: 'English Speaking AI',
       theme: AppTheme.theme,
       home: const AppInitializer(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -45,18 +51,33 @@ class _AppInitializerState extends State<AppInitializer> {
   }
 
   Future<void> _checkLoginStatus() async {
-    final token = await _storage.read(key: 'auth_token');
-    setState(() {
-      _isLoggedIn = token != null; // Check if token exists
-      _isLoading = false;
-    });
+    try {
+      final token = await _storage.read(key: 'auth_token');
+      setState(() {
+        _isLoggedIn = token != null;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoggedIn = false;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFFC6F432),
+          ),
+        ),
+      );
     }
-    return _isLoggedIn ? const HomeScreen(isNewUser: false) : const PhoneEntryScreen();
+    
+    return _isLoggedIn ? const HomeScreen(isNewUser: false) : const SignUpScreen();
   }
 }
