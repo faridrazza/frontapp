@@ -107,3 +107,7 @@ lib/core/config/app_config.dart
 
 # Ignore keystore file
 android/app/*speakjar.jks
+
+# Environment variables
+.env
+lib/core/config/env.dart

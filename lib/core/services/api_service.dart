@@ -5,11 +5,13 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logger/logger.dart';
 import 'package:frontapp/core/config/app_config.dart';
 import 'package:frontapp/core/utils/feedback_parser.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ApiService {
   final Dio _dio = Dio();
   final FlutterSecureStorage _storage = FlutterSecureStorage();
   final Logger _logger = Logger();
+  final _supabase = Supabase.instance.client;
 
   // // Use this for local development
   // static const String _baseUrlDev = 'http://192.168.0.105:5000'; // Verify this IP and port
@@ -696,56 +698,31 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> requestPasswordReset(String email) async {
+  Future<void> requestPasswordReset(String email) async {
     _logger.i('📧 Initiating password reset request');
-    _logger.d('Email: $email');
-
     try {
-      _logger.d('Making API request to: $_baseUrl/api/auth/forgot-password');
-      final response = await _dio.post(
-        '$_baseUrl/api/auth/forgot-password',
-        data: {'email': email},
+      await _supabase.auth.resetPasswordForEmail(
+        email,
+        redirectTo: 'speakjar://reset-password', // Your deep link URL
       );
-
-      _logger.d('API Response Status Code: ${response.statusCode}');
-      _logger.d('API Response Data: ${response.data}');
-
-      if (response.statusCode == 200) {
-        _logger.i('✅ Password reset request sent successfully');
-        return response.data;
-      } else {
-        _logger.e('❌ Failed to send password reset request. Status code: ${response.statusCode}');
-        throw Exception('Failed to send password reset request');
-      }
+      _logger.i('✅ Password reset email sent successfully');
     } catch (e) {
       _logger.e('❌ Error requesting password reset', error: e);
       throw Exception('Error requesting password reset: $e');
     }
   }
 
-  Future<Map<String, dynamic>> resetPassword(String password, String token) async {
-    _logger.i('🔐 Initiating password reset');
-    
+  Future<void> resetPasswordWithSupabase({
+    required String password,
+  }) async {
+    _logger.i('🔐 Resetting password with Supabase');
     try {
-      _logger.d('Making API request to: $_baseUrl/api/auth/reset-password');
-      final response = await _dio.post(
-        '$_baseUrl/api/auth/reset-password',
-        data: {
-          'password': password,
-          'token': token, // Token from URL query parameter
-        },
+      await _supabase.auth.updateUser(
+        UserAttributes(
+          password: password,
+        ),
       );
-
-      _logger.d('API Response Status Code: ${response.statusCode}');
-      _logger.d('API Response Data: ${response.data}');
-
-      if (response.statusCode == 200) {
-        _logger.i('✅ Password reset successful');
-        return response.data;
-      } else {
-        _logger.e('❌ Failed to reset password. Status code: ${response.statusCode}');
-        throw Exception('Failed to reset password');
-      }
+      _logger.i('✅ Password updated successfully');
     } catch (e) {
       _logger.e('❌ Error resetting password', error: e);
       throw Exception('Error resetting password: $e');

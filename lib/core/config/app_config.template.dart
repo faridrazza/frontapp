@@ -8,7 +8,7 @@
 
 
     class AppConfig {
-     static const String devBaseUrl = 'http://192.168.0.111:5000';
+     static const String devBaseUrl = 'http://192.168.0.111:3000';
      static const String prodBaseUrl = 'YOUR_PROD_URL_HERE';
      static const bool isProduction = false; // Set to true for production builds
 
