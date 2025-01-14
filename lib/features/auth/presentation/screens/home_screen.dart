@@ -173,9 +173,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     Expanded(
                       child: GridView.count(
                         crossAxisCount: 2,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                        childAspectRatio: 1.5,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 1.6,
                         children: [
                           _buildFeatureButton('Speak with AI', Color(0xFFC6F432), Icons.record_voice_over, true),
                           _buildFeatureButton('Interview AI', Color(0xFF7B61FF), Icons.business, false),
@@ -242,7 +242,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         border: Border.all(
           color: Color(0xFFC6F432),
           width: 2,
-        ),
+        ), 
       ),
       child: CircleAvatar(
         backgroundImage: AssetImage('assets/images/iconai.png'),
@@ -253,10 +253,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Widget _buildFeatureButton(String label, Color color, IconData icon, bool isMain) {
     return Container(
-      height: 104,
+      height: 90,
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(28),
         border: Border.all(
           color: color.withOpacity(0.2),
           width: 1,
@@ -272,7 +272,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(32),
+          borderRadius: BorderRadius.circular(28),
           onTap: () => _handleFeatureTap(label),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -280,14 +280,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               Icon(
                 icon,
                 color: color,
-                size: 32,
+                size: 28,
               ),
-              SizedBox(height: 8),
+              SizedBox(height: 6),
               Text(
                 label,
                 style: GoogleFonts.poppins(
                   color: color,
-                  fontSize: 14,
+                  fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.center,
