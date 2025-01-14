@@ -10,12 +10,7 @@ class SettingsContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.all(16),
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(color: Color(0xFFC6F432)),
-        borderRadius: BorderRadius.circular(10),
-      ),
+      margin: EdgeInsets.symmetric(vertical: 8),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: items.map((item) => SettingsListItem(item: item)).toList(),
