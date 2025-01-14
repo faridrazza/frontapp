@@ -23,14 +23,20 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
+      barrierColor: Colors.black.withOpacity(0.85),
       builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.black,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: Color(0xFFC6F432), width: 1),
-          ),
-          child: SingleChildScrollView(
+        return PopScope(
+          canPop: false,
+          child: Dialog(
+            backgroundColor: Colors.black,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(
+                color: Color(0xFFC6F432),
+                width: 1.5,
+              ),
+            ),
+            insetPadding: EdgeInsets.symmetric(horizontal: 20),
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24.0),
@@ -38,7 +44,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    padding: EdgeInsets.all(16),
+                    width: 64,
+                    height: 64,
                     decoration: BoxDecoration(
                       color: Color(0xFFC6F432).withOpacity(0.1),
                       shape: BoxShape.circle,
@@ -46,31 +53,32 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     child: Icon(
                       Icons.check_circle_outline,
                       color: Color(0xFFC6F432),
-                      size: 48,
+                      size: 32,
                     ),
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: 24),
                   Text(
                     'Password Updated!',
                     style: GoogleFonts.inter(
                       color: Colors.white,
-                      fontSize: 20,
+                      fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 12),
+                  SizedBox(height: 16),
                   Text(
                     'Your password has been successfully updated. Please sign in with your new password.',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
                       color: Colors.white70,
-                      fontSize: 14,
+                      fontSize: 16,
+                      height: 1.5,
                     ),
                   ),
-                  SizedBox(height: 24),
-                  SizedBox(
+                  SizedBox(height: 32),
+                  Container(
                     width: double.infinity,
-                    height: 48,
+                    height: 56,
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.of(context).pushAndRemoveUntil(
@@ -83,14 +91,15 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFFC6F432),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                         ),
+                        elevation: 0,
                       ),
                       child: Text(
                         'Sign In',
                         style: GoogleFonts.inter(
                           color: Colors.black,
-                          fontSize: 16,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
