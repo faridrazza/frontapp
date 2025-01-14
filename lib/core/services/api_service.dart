@@ -622,38 +622,6 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> socialSignIn({
-    required String provider,
-    String? nativeLanguage,
-  }) async {
-    _logger.i('🔑 Initiating social sign in');
-    _logger.d('Parameters - Provider: $provider, Native Language: $nativeLanguage');
-
-    try {
-      final response = await _dio.post(
-        '$_baseUrl/api/auth/social-signin',
-        data: {
-          'provider': provider,
-          'nativeLanguage': nativeLanguage,
-        },
-      );
-
-      _logger.d('API Response Status Code: ${response.statusCode}');
-      _logger.d('API Response Data: ${response.data}');
-
-      if (response.statusCode == 200) {
-        _logger.i('✅ Social sign in successful');
-        return response.data;
-      } else {
-        _logger.e('❌ Social sign in failed. Status code: ${response.statusCode}');
-        throw Exception('Failed to sign in with $provider');
-      }
-    } catch (e) {
-      _logger.e('❌ Error during social sign in', error: e);
-      throw Exception('Error during social sign in: $e');
-    }
-  }
-
   // Add a method to initialize the API service with stored token
   Future<void> initializeToken() async {
     final token = await _storage.read(key: 'auth_token');

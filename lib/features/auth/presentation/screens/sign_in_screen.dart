@@ -78,30 +78,6 @@ class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderSt
     }
   }
 
-  Future<void> _handleSocialSignIn(String provider) async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = '';
-    });
-
-    try {
-      final response = await _apiService.socialSignIn(provider: provider);
-      await _storage.write(key: 'auth_token', value: response['token']);
-      
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen(isNewUser: false)),
-      );
-    } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -201,38 +177,6 @@ class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderSt
                                 color: Colors.black,
                               ),
                             ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    Row(
-                      children: [
-                        Expanded(child: Divider(color: Colors.white24)),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            'Or continue with',
-                            style: GoogleFonts.inter(color: Colors.white70),
-                          ),
-                        ),
-                        Expanded(child: Divider(color: Colors.white24)),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        SocialLoginButton(
-                          icon: 'assets/images/google_icon.png',
-                          label: 'Google',
-                          onPressed: () => _handleSocialSignIn('google'),
-                        ),
-                        SocialLoginButton(
-                          icon: 'assets/images/github_icon.png',
-                          label: 'GitHub',
-                          onPressed: () => _handleSocialSignIn('github'),
-                        ),
-                      ],
                     ),
                     const SizedBox(height: 24),
 
