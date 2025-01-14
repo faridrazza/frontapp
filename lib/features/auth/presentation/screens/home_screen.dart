@@ -70,9 +70,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         SnackBar(content: Text('No internet connection.')),
       );
     } else {
-      _fetchUserProfile(); // Fetch profile if connected
-      _adService.loadLargeBannerAd(); // Load ads if connected
-      _adService.loadInterstitialAd(); // Load ads if connected
+      _fetchUserProfile(); // Fetch profile when connection is restored
+      _adService.loadLargeBannerAd();
+      _adService.loadInterstitialAd();
     }
   }
 
@@ -90,7 +90,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       
       if (mounted) {
         setState(() {
-          // Access the nested 'name' field inside the 'user' object
           _userName = profile['user']?['name']?.toString().trim() ?? 'User';
           _logger.i('Updated username to: $_userName');
         });
@@ -133,73 +132,59 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
+            // Enhanced Header
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(20.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(NavigationUtils.createSettingsRoute());
-                    },
-                    child: Icon(Icons.menu, color: Colors.white, size: 24),
-                  ),
-                  Text(
-                    'Hi, $_userName 👋',
-                    style: GoogleFonts.inter(
-                      textStyle: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  CircleAvatar(
-                    backgroundImage: AssetImage('assets/images/profile.png'),
-                    radius: 16,
-                  ),
+                  _buildMenuButton(),
+                  _buildGreeting(),
+                  _buildProfileAvatar(),
                 ],
               ),
             ),
             // Main content
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Speak English\nConfidently,',
-                      style: GoogleFonts.inter(
-                        textStyle: TextStyle(
-                          color: Colors.white,
-                          fontSize: 32,
+                    // Enhanced Title with Gradient
+                    ShaderMask(
+                      shaderCallback: (bounds) => LinearGradient(
+                        colors: [Color(0xFFC6F432), Color(0xFF90E0EF)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ).createShader(bounds),
+                      child: Text(
+                        'Speak English\nConfidently,',
+                        style: GoogleFonts.poppins(
+                          fontSize: 35,
+                          height: 1.2,
                           fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
                     ),
-                    SizedBox(height: 24),
-                    GridView.count(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 183 / 104,
-                      children: [
-                        _buildFeatureButton('Speak with AI', Color(0xFFC6F432), Icons.record_voice_over),
-                        _buildFeatureButton('Interview AI', Color(0xFF7B61FF), Icons.business),
-                        _buildFeatureButton('Learn with AI', Color(0xFFC09FF8), Icons.school),
-                        _buildFeatureButton('Role play ideas', Color(0xFFFFB341), Icons.lightbulb),
-                        _buildFeatureButton('Rapid Sentence', Color(0xFFFEC4DD), Icons.qr_code),
-                      ],
-                    ),
-                    SizedBox(height: 35), // Add padding before the ad
-                    if (_adService.isLargeBannerAdReady)
-                      Container(
-                        alignment: Alignment.center,
-                        width: _adService.largeBannerAd!.size.width.toDouble(),
-                        height: _adService.largeBannerAd!.size.height.toDouble(),
-                        child: AdWidget(ad: _adService.largeBannerAd!),
+                    SizedBox(height: 40),
+                    // Enhanced Feature Grid
+                    Expanded(
+                      child: GridView.count(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 1.5,
+                        children: [
+                          _buildFeatureButton('Speak with AI', Color(0xFFC6F432), Icons.record_voice_over, true),
+                          _buildFeatureButton('Interview AI', Color(0xFF7B61FF), Icons.business, false),
+                          _buildFeatureButton('Learn with AI', Color(0xFFC09FF8), Icons.school, false),
+                          _buildFeatureButton('Role play ideas', Color(0xFFFFB341), Icons.lightbulb, false),
+                          _buildFeatureButton('Rapid Sentence', Color(0xFFFEC4DD), Icons.qr_code, false),
+                        ],
                       ),
-                    Spacer(), // This will push the ad up, filling the remaining space
+                    ),
                   ],
                 ),
               ),
@@ -207,182 +192,242 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ],
         ),
       ),
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Color(0xFFC6F432),
-            borderRadius: BorderRadius.circular(30),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildNavItem(Icons.home, 'Home', true),
-                  _buildNavItem(Icons.share, 'Share', false, onTap: _shareApp),
-                  _buildNavItem(Icons.headphones, 'Help', false),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFeatureButton(String label, Color color, IconData icon) {
-    return GestureDetector(
-      onTap: () async {
-        if (label == 'Speak with AI') {
-          await _adService.showInterstitialAd();
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => BlocProvider(
-                create: (context) => SpeakWithAIBloc(
-                  SpeakWithAIRepository(
-                    ApiService(),
-                    WebSocketService(),
-                  ),
-                ),
-                child: SpeakWithAIScreen(),
-              ),
-            ),
-          );
-        } else if (label == 'Interview AI') {
-          await _adService.showInterstitialAd();
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => BlocProvider(
-                create: (context) => InterviewBloc(
-                  repository: InterviewRepository(_apiService),
-                ),
-                child: InterviewScreen(),
-              ),
-            ),
-          );
-        } else if (label == 'Learn with AI') {
-          await _adService.showInterstitialAd();
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => BlocProvider(
-                create: (context) => LearnWithAiBloc(ApiService()),
-                child: LearnWithAiScreen(),
-              ),
-            ),
-          );
-        } else if (label == 'Rapid Sentence') {
-          await _adService.showInterstitialAd();
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => RapidTranslationGameScreen(
-                targetLanguage: 'en-US', // Replace with the appropriate language code
-              ),
-            ),
-          );
-        } else if (label == 'Role play ideas') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => RolePlayScreen(),
-            ),
-          );
-        }
-        // Add other feature navigations here when implemented
-      },
-      child: Container(
+      bottomNavigationBar: Container(
+        margin: EdgeInsets.fromLTRB(20, 0, 20, 20),
+        height: 60,
         decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(24),
+          gradient: LinearGradient(
+            colors: [Color(0xFFC6F432), Color(0xFF90E0EF)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0xFFC6F432).withOpacity(0.2),
+              blurRadius: 12,
+              offset: Offset(0, 4),
+            ),
+          ],
         ),
-        child: Stack(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(icon, size: 24, color: Colors.black),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    label,
-                    style: GoogleFonts.inter(
-                      textStyle: TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.w600),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-            Positioned(
-              top: 8,
-              right: 8,
-              child: Icon(Icons.arrow_forward, size: 20, color: Colors.black),
-            ),
+            _buildNavItem(Icons.home, 'Home', true),
+            _buildNavItem(Icons.share, 'Share', false),
+            _buildNavItem(Icons.headphones, 'Help', false),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, bool isActive, {VoidCallback? onTap}) {
+  Widget _buildMenuButton() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: IconButton(
+        icon: Icon(Icons.menu, color: Colors.white),
+        onPressed: () => Navigator.of(context).push(NavigationUtils.createSettingsRoute()),
+      ),
+    );
+  }
+
+  Widget _buildProfileAvatar() {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: Color(0xFFC6F432),
+          width: 2,
+        ),
+      ),
+      child: CircleAvatar(
+        backgroundImage: AssetImage('assets/images/iconai.png'),
+        radius: 18,
+      ),
+    );
+  }
+
+  Widget _buildFeatureButton(String label, Color color, IconData icon, bool isMain) {
+    return Container(
+      height: 104,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(32),
+          onTap: () => _handleFeatureTap(label),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: color,
+                size: 32,
+              ),
+              SizedBox(height: 8),
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  color: color,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGreeting() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'Hi, ',
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        Text(
+          _userName.isNotEmpty ? _userName : 'User',
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        Text(
+          ' 👋',
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, bool isSelected) {
     return GestureDetector(
-      onTap: onTap ?? () {
-        if (label == 'Help') {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => HelpScreen(),
-            ),
-          );
-        } else if (label == 'Reminder') {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => ReminderScreen(),
-            ),
-          );
+      onTap: () {
+        switch (label) {
+          case 'Share':
+            _shareApp();
+            break;
+          case 'Help':
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => HelpScreen()),
+            );
+            break;
+          default:
+            break;
         }
-        // Add other navigation logic for other items if needed
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: isActive ? Colors.black : Colors.transparent,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              icon,
-              color: isActive ? Colors.white : Colors.black,
-              size: 24,
-            ),
+          Icon(
+            icon,
+            color: Colors.black.withOpacity(isSelected ? 1 : 0.5),
+            size: 24,
           ),
-          SizedBox(height: 3),
           Text(
             label,
-            style: GoogleFonts.inter(
-              textStyle: TextStyle(
-                color: Colors.black,
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-              ),
+            style: GoogleFonts.poppins(
+              color: Colors.black.withOpacity(isSelected ? 1 : 0.5),
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             ),
           ),
         ],
       ),
     );
+  }
+
+  void _handleFeatureTap(String label) async {
+    if (label == 'Speak with AI') {
+      await _adService.showInterstitialAd();
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BlocProvider(
+            create: (context) => SpeakWithAIBloc(
+              SpeakWithAIRepository(
+                ApiService(),
+                WebSocketService(),
+              ),
+            ),
+            child: SpeakWithAIScreen(),
+          ),
+        ),
+      );
+    } else if (label == 'Interview AI') {
+      await _adService.showInterstitialAd();
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BlocProvider(
+            create: (context) => InterviewBloc(
+              repository: InterviewRepository(_apiService),
+            ),
+            child: InterviewScreen(),
+          ),
+        ),
+      );
+    } else if (label == 'Learn with AI') {
+      await _adService.showInterstitialAd();
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BlocProvider(
+            create: (context) => LearnWithAiBloc(ApiService()),
+            child: LearnWithAiScreen(),
+          ),
+        ),
+      );
+    } else if (label == 'Rapid Sentence') {
+      await _adService.showInterstitialAd();
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => RapidTranslationGameScreen(
+            targetLanguage: 'en-US', // Replace with the appropriate language code
+          ),
+        ),
+      );
+    } else if (label == 'Role play ideas') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => RolePlayScreen(),
+        ),
+      );
+    }
+    // Add other feature navigations here when implemented
   }
 }

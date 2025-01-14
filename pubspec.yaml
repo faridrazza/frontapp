@@ -125,6 +125,7 @@ flutter:
     - assets/images/waveai.png
     - assets/images/google_icon.png
     - assets/images/github_icon.png
+    - assets/images/iconai.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
