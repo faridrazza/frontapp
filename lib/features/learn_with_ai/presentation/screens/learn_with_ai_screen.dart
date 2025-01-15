@@ -134,13 +134,17 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> with SingleTicker
       },
       builder: (context, state) {
         if (state is LearnWithAiLoaded) {
-          return ListView.builder(
-            controller: _scrollController,
-            itemCount: state.messages.length,
-            itemBuilder: (context, index) {
-              final message = state.messages[index];
-              return ChatBubble(message: message);
-            },
+          return Padding(
+            padding: EdgeInsets.only(top: 16),
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              itemCount: state.messages.length,
+              itemBuilder: (context, index) {
+                final message = state.messages[index];
+                return ChatBubble(message: message);
+              },
+            ),
           );
         } else if (state is LearnWithAiError) {
           return Center(child: Text('Error: ${state.error}', style: TextStyle(color: Colors.red)));
