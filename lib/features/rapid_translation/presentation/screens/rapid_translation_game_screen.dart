@@ -16,7 +16,10 @@ import 'dart:async'; // Add this import
 class RapidTranslationGameScreen extends StatefulWidget {
   final String targetLanguage;
 
-  const RapidTranslationGameScreen({Key? key, required this.targetLanguage}) : super(key: key);
+  const RapidTranslationGameScreen({
+    Key? key,
+    required this.targetLanguage,
+  }) : super(key: key);
 
   @override
   _RapidTranslationGameScreenState createState() => _RapidTranslationGameScreenState();
@@ -62,20 +65,13 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Color(0xFF010101),
       body: SafeArea(
         child: Column(
           children: [
             _buildHeader(),
-            Divider(color: Colors.white24),
-            Expanded(
-              child: _isGameStarted ? _buildChatArea() : _buildGameSetup(),
-            ),
-            _buildBottomActions(),
-            if (_isLoading) // Show loading indicator when loading
-              Center(
-                child: CircularProgressIndicator(),
-              ),
+            _buildGameArea(),
+            if (_isGameStarted) _buildInputArea(),
           ],
         ),
       ),
@@ -83,233 +79,264 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   }
 
   Widget _buildHeader() {
-    return Padding(
-      // padding: const EdgeInsets.all(6.0),
-      padding: const EdgeInsets.symmetric(horizontal: 30,vertical: 5),
+    return Container(
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF1E1E1E), Color(0xFF010101)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          ElevatedButton(
-            onPressed: _exitGame,
-            child: Text('Exit Game'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFFC6F432),
-              foregroundColor: Colors.black,
-              textStyle: GoogleFonts.inter(fontWeight: FontWeight.bold),
+          IconButton(
+            icon: Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+          if (_isGameStarted && _selectedTimer != 'No Timer')
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Color(0xFFC6F432).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Color(0xFFC6F432).withOpacity(0.3)),
+              ),
+              child: Text(
+                '$_remainingTime s',
+                style: GoogleFonts.poppins(
+                  color: Color(0xFFC6F432),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color(0xFFC6F432).withOpacity(0.1),
+              border: Border.all(color: Color(0xFFC6F432).withOpacity(0.3)),
+            ),
+            child: IconButton(
+              icon: Icon(
+                _isPaused ? Icons.play_arrow : Icons.pause,
+                color: Color(0xFFC6F432),
+              ),
+              onPressed: _isPaused ? _resumeGame : _pauseGame,
             ),
           ),
-          // Score button removed
         ],
       ),
     );
   }
 
-  Widget _buildGameSetup() {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Game Instructions
-            Text(
-              'Rapid-Fire Translation Game',
-              style: GoogleFonts.inter(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              "Translate the given sentence into English. Tap the microphone button, speak clearly, and once you've recorded, wait two seconds before turning off the mic.",
+  Widget _buildGameArea() {
+    return Expanded(
+      child: Container(
+        decoration: BoxDecoration(
+          color: Color(0xFF121212),
+          
+        ),
+        child: _isGameStarted
+            ? _buildChatArea()
+            : _buildGameSetup(),
+      ),
+    );
+  }
 
-              style: GoogleFonts.inter(
-                color: Colors.white,
-                fontSize: 16,
-              ),
+  Widget _buildGameSetup() {
+    return Padding(
+      padding: EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Select Difficulty',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
             ),
-            SizedBox(height: 24),
-            
-            // Timer Selection Options
-            Text(
-              'Select Timer',
-              style: GoogleFonts.inter(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+          ),
+          SizedBox(height: 16),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: ['Easy', 'Medium', 'Hard'].map((difficulty) {
+              return DifficultyButton(
+                label: difficulty,
+                isSelected: _selectedDifficulty == difficulty,
+                onPressed: () => setState(() => _selectedDifficulty = difficulty),
+              );
+            }).toList(),
+          ),
+          SizedBox(height: 32),
+          Text(
+            'Select Timer',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
             ),
-            SizedBox(height: 16),
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              childAspectRatio: 3,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              children: [
-                TimerButton(
-                  label: '10 Seconds',
-                  icon: Icons.alarm,
-                  isSelected: _selectedTimer == '10',
-                  onPressed: () => _selectTimer('10'),
-                ),
-                TimerButton(
-                  label: '15 Seconds',
-                  icon: Icons.alarm,
-                  isSelected: _selectedTimer == '15',
-                  onPressed: () => _selectTimer('15'),
-                ),
-                TimerButton(
-                  label: '30 Seconds',
-                  icon: Icons.alarm,
-                  isSelected: _selectedTimer == '30',
-                  onPressed: () => _selectTimer('30'),
-                ),
-                TimerButton(
-                  label: 'No Timer',
-                  icon: Icons.timer_off,
-                  isSelected: _selectedTimer == 'No Timer',
-                  onPressed: () => _selectTimer('No Timer'),
-                ),
-              ],
-            ),
-            SizedBox(height: 32),
-            Text(
-              'Select Difficulty Level',
-              style: GoogleFonts.inter(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                DifficultyButton(
-                  label: 'Easy',
-                  isSelected: _selectedDifficulty == 'easy',
-                  onPressed: () => _selectDifficulty('easy'),
-                ),
-                DifficultyButton(
-                  label: 'Medium',
-                  isSelected: _selectedDifficulty == 'medium',
-                  onPressed: () => _selectDifficulty('medium'),
-                ),
-                DifficultyButton(
-                  label: 'Hard',
-                  isSelected: _selectedDifficulty == 'hard',
-                  onPressed: () => _selectDifficulty('hard'),
-                ),
-              ],
-            ),
-            SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: _canStartGame() ? _startGame : null,
-              child: Text('Start Game'),
+          ),
+          SizedBox(height: 16),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: ['No Timer', '30', '60', '90'].map((timer) {
+              return TimerButton(
+                label: timer == 'No Timer' ? timer : '$timer sec',
+                icon: Icons.timer,
+                isSelected: _selectedTimer == timer,
+                onPressed: () => setState(() => _selectedTimer = timer),
+              );
+            }).toList(),
+          ),
+          Spacer(),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _startGame,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFFC6F432),
                 foregroundColor: Colors.black,
-                textStyle: GoogleFonts.inter(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
                 padding: EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: Text(
+                'Start Game',
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildChatArea() {
-    return ListView.builder(
-      controller: _scrollController,
-      itemCount: _chatMessages.length,
-      itemBuilder: (context, index) {
-        final message = _chatMessages[index];
-        _logger.i('Building chat message: ${message.text}');
-        return ChatBubble(
-          message: message,
-          onNextSentence: message.isButton ? _getNextSentence : null,
-        );
-      },
-    );
-  }
-
-  Widget _buildBottomActions() {
-    return Column(
+    return Stack(
       children: [
-        if (_selectedTimer != 'No Timer' && _isGameStarted)
-          Text(
-            'Time remaining: $_remainingTime seconds',
-            style: TextStyle(color: Colors.white),
-          ),
-        Container(
-          padding: EdgeInsets.symmetric(vertical: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              // Text Input Button
-              _buildCircularButton(
-                onPressed: _showTextInput,
-                backgroundColor: Colors.grey[800]!,
-                icon: Icons.keyboard,
-                iconColor: Colors.white,
-              ),
-              // Microphone Button
-              Transform.scale(
-                scale: 1.2,
-                child: _buildCircularButton(
-                  onPressed: _isListening ? _stopListening : _startListening,
-                  backgroundColor: _isListening ? Colors.red : Color(0xFFC6F432),
-                  icon: Icons.mic,
-                  iconColor: Colors.black,
-                  iconSize: 30,
+        ListView.builder(
+          controller: _scrollController,
+          padding: EdgeInsets.only(bottom: 100),
+          itemCount: _chatMessages.length,
+          itemBuilder: (context, index) {
+            return ChatBubble(
+              message: _chatMessages[index],
+              onNextSentence: _chatMessages[index].isButton ? _getNextSentence : null,
+            );
+          },
+        ),
+        if (_showIndicator)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 2,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFC6F432), Color(0xFF90E0EF)],
                 ),
               ),
-              // Timer Button removed
-            ],
+            ),
           ),
-        ),
       ],
     );
   }
 
-  Widget _buildCircularButton({
-    required VoidCallback onPressed,
-    required Color backgroundColor,
-    required IconData icon,
-    required Color iconColor,
-    double iconSize = 24,
-  }) {
+  Widget _buildInputArea() {
     return Container(
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: backgroundColor,
+        color: Color(0xFF1E1E1E),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 10,
+            offset: Offset(0, -2),
+          ),
+        ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          customBorder: CircleBorder(),
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: iconSize,
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: _isListening ? _stopListening : _startListening,
+            child: AnimatedContainer(
+              duration: Duration(milliseconds: 300),
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _isListening 
+                    ? Color(0xFFC6F432)
+                    : Color(0xFFC6F432).withOpacity(0.1),
+                border: Border.all(
+                  color: Color(0xFFC6F432).withOpacity(_isListening ? 1 : 0.3),
+                  width: 2,
+                ),
+                boxShadow: _isListening
+                    ? [
+                        BoxShadow(
+                          color: Color(0xFFC6F432).withOpacity(0.3),
+                          blurRadius: 12,
+                          spreadRadius: 2,
+                        )
+                      ]
+                    : [],
+              ),
+              child: Icon(
+                _isListening ? Icons.stop : Icons.mic,
+                color: _isListening ? Colors.black : Color(0xFFC6F432),
+                size: 30,
+              ),
             ),
           ),
-        ),
+          SizedBox(width: 12),
+          Expanded(
+            child: GestureDetector(
+              onTap: _showTextInput,
+              child: Container(
+                height: 60,
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                decoration: BoxDecoration(
+                  color: Color(0xFF2A2A2A),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.1),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Type your translation...',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white.withOpacity(0.5),
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      Icons.keyboard,
+                      color: Colors.white.withOpacity(0.5),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
-  } 
+  }
 
   void _selectTimer(String timer) {
     setState(() {
@@ -577,51 +604,92 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Color(0xFF1E1E1E),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      ),
       builder: (BuildContext context) {
         return Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 16,
-            right: 16,
-            top: 16,
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _textController,
-                decoration: InputDecoration(
-                  hintText: 'Type your translation...',
-                  border: OutlineInputBorder(),
-                  filled: true,
-                  fillColor: Colors.black,
+          child: Container(
+            padding: EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  height: 4,
+                  width: 40,
+                  margin: EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-                autofocus: true,
-              ),
-              SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  if (_textController.text.isNotEmpty) {
-                    setState(() {
-                      _chatMessages.add(ChatMessage(
-                        text: _textController.text,
-                        isSystem: false,
-                        isError: false,
-                      ));
-                    });
-                    _submitTranslation(_textController.text);
-                    Navigator.pop(context);
-                    _textController.clear();
-                    _scrollToBottom();
-                  }
-                },
-                child: Text('Submit'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFFC6F432),
-                  foregroundColor: Colors.black,
+                Container(
+                  decoration: BoxDecoration(
+                    color: Color(0xFF2A2A2A),
+                    borderRadius: BorderRadius.circular(25),
+                    border: Border.all(
+                      color: Color(0xFFC6F432).withOpacity(0.3),
+                    ),
+                  ),
+                  child: TextField(
+                    controller: _textController,
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Type your translation...',
+                      hintStyle: GoogleFonts.poppins(
+                        color: Colors.white.withOpacity(0.5),
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.all(20),
+                    ),
+                    autofocus: true,
+                  ),
                 ),
-              ),
-            ],
+                SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_textController.text.isNotEmpty) {
+                        setState(() {
+                          _chatMessages.add(ChatMessage(
+                            text: _textController.text,
+                            isSystem: false,
+                            isError: false,
+                          ));
+                        });
+                        _submitTranslation(_textController.text);
+                        Navigator.pop(context);
+                        _textController.clear();
+                        _scrollToBottom();
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFFC6F432),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                    ),
+                    child: Text(
+                      'Send',
+                      style: GoogleFonts.poppins(
+                        color: Colors.black,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
