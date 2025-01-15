@@ -80,7 +80,7 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
 
   Widget _buildHeader() {
     return Container(
-      padding: EdgeInsets.all(8),
+      padding: EdgeInsets.all(12),
       color: Color(0xFF121212),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -245,46 +245,47 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   }
 
   Widget _buildDifficultyOption(String difficulty, Color color) {
+    final bool isSelected = _selectedDifficulty == difficulty;
     return Container(
-      height: 90,
+      height: 80,
       width: (MediaQuery.of(context).size.width - 72) / 3,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(28),
+        color: isSelected ? color.withOpacity(0.2) : color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: _selectedDifficulty == difficulty 
-              ? color 
-              : color.withOpacity(0.2),
-          width: 2,
+          color: isSelected ? color : color.withOpacity(0.2),
+          width: isSelected ? 2 : 1,
         ),
         boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.1),
-            blurRadius: 8,
-            offset: Offset(0, 4),
-          ),
+          if (isSelected)
+            BoxShadow(
+              color: color.withOpacity(0.3),
+              blurRadius: 12,
+              spreadRadius: 1,
+              offset: Offset(0, 4),
+            ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(24),
           onTap: () => setState(() => _selectedDifficulty = difficulty),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 _getDifficultyIcon(difficulty),
-                color: color,
-                size: 28,
+                color: isSelected ? color : color.withOpacity(0.7),
+                size: 24,
               ),
-              SizedBox(height: 8),
+              SizedBox(height: 6),
               Text(
                 difficulty,
                 style: GoogleFonts.poppins(
-                  color: color,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                  color: isSelected ? color : color.withOpacity(0.7),
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 ),
               ),
             ],
@@ -310,43 +311,45 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   Widget _buildTimerOption(String timer, Color color) {
     final bool isSelected = _selectedTimer == timer;
     return Container(
-      height: 90,
+      height: 80,
       width: (MediaQuery.of(context).size.width - 72) / 2,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(28),
+        color: isSelected ? color.withOpacity(0.2) : color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isSelected ? color : color.withOpacity(0.2),
-          width: 2,
+          width: isSelected ? 2 : 1,
         ),
         boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.1),
-            blurRadius: 8,
-            offset: Offset(0, 4),
-          ),
+          if (isSelected)
+            BoxShadow(
+              color: color.withOpacity(0.3),
+              blurRadius: 12,
+              spreadRadius: 1,
+              offset: Offset(0, 4),
+            ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(24),
           onTap: () => setState(() => _selectedTimer = timer),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 Icons.timer,
-                color: color,
-                size: 28,
+                color: isSelected ? color : color.withOpacity(0.7),
+                size: 24,
               ),
-              SizedBox(height: 8),
+              SizedBox(height: 6),
               Text(
                 timer == 'No Timer' ? timer : '$timer sec',
                 style: GoogleFonts.poppins(
-                  color: color,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                  color: isSelected ? color : color.withOpacity(0.7),
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 ),
               ),
             ],
