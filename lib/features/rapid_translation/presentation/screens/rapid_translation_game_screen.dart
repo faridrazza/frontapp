@@ -196,9 +196,9 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
             runSpacing: 12,
             children: [
               _buildTimerOption('No Timer', Color(0xFFC09FF8)),
-              _buildTimerOption('30', Color(0xFF7B61FF)),
-              _buildTimerOption('60', Color(0xFFFFB341)),
-              _buildTimerOption('90', Color(0xFFFEC4DD)),
+              _buildTimerOption('20', Color(0xFF7B61FF)),
+              _buildTimerOption('40', Color(0xFFFFB341)),
+              _buildTimerOption('60', Color(0xFFFEC4DD)),
             ],
           ),
           Spacer(),
