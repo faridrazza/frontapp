@@ -80,7 +80,7 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
 
   Widget _buildHeader() {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: EdgeInsets.all(8),
       color: Color(0xFF121212),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -145,11 +145,29 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Enhanced Title with Gradient
+          ShaderMask(
+            shaderCallback: (bounds) => LinearGradient(
+              colors: [Color(0xFFC6F432), Color(0xFF90E0EF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ).createShader(bounds),
+            child: Text(
+              'Rapid Translation\nGame',
+              style: GoogleFonts.poppins(
+                fontSize: 32,
+                height: 1.2,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          SizedBox(height: 32),
           Text(
             'Select Difficulty',
             style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontSize: 24,
+              color: Color(0xFFC6F432),
+              fontSize: 20,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -157,20 +175,18 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
           Wrap(
             spacing: 12,
             runSpacing: 12,
-            children: ['Easy', 'Medium', 'Hard'].map((difficulty) {
-              return DifficultyButton(
-                label: difficulty,
-                isSelected: _selectedDifficulty == difficulty,
-                onPressed: () => setState(() => _selectedDifficulty = difficulty),
-              );
-            }).toList(),
+            children: [
+              _buildDifficultyOption('Easy', Color(0xFFC6F432)),
+              _buildDifficultyOption('Medium', Color(0xFF7B61FF)),
+              _buildDifficultyOption('Hard', Color(0xFFFEC4DD)),
+            ],
           ),
           SizedBox(height: 32),
           Text(
             'Select Timer',
             style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontSize: 24,
+              color: Color(0xFF90E0EF),
+              fontSize: 20,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -178,31 +194,45 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
           Wrap(
             spacing: 12,
             runSpacing: 12,
-            children: ['No Timer', '30', '60', '90'].map((timer) {
-              return TimerButton(
-                label: timer == 'No Timer' ? timer : '$timer sec',
-                icon: Icons.timer,
-                isSelected: _selectedTimer == timer,
-                onPressed: () => setState(() => _selectedTimer = timer),
-              );
-            }).toList(),
+            children: [
+              _buildTimerOption('No Timer', Color(0xFFC09FF8)),
+              _buildTimerOption('30', Color(0xFF7B61FF)),
+              _buildTimerOption('60', Color(0xFFFFB341)),
+              _buildTimerOption('90', Color(0xFFFEC4DD)),
+            ],
           ),
           Spacer(),
-          SizedBox(
+          Container(
             width: double.infinity,
+            height: 56,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFC6F432), Color(0xFF90E0EF)],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFFC6F432).withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
             child: ElevatedButton(
               onPressed: _startGame,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFC6F432),
-                foregroundColor: Colors.black,
-                padding: EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(28),
                 ),
               ),
               child: Text(
                 'Start Game',
                 style: GoogleFonts.poppins(
+                  color: Colors.black,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
@@ -210,6 +240,118 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDifficultyOption(String difficulty, Color color) {
+    return Container(
+      height: 90,
+      width: (MediaQuery.of(context).size.width - 72) / 3,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: _selectedDifficulty == difficulty 
+              ? color 
+              : color.withOpacity(0.2),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(28),
+          onTap: () => setState(() => _selectedDifficulty = difficulty),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                _getDifficultyIcon(difficulty),
+                color: color,
+                size: 28,
+              ),
+              SizedBox(height: 8),
+              Text(
+                difficulty,
+                style: GoogleFonts.poppins(
+                  color: color,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _getDifficultyIcon(String difficulty) {
+    switch (difficulty) {
+      case 'Easy':
+        return Icons.sentiment_satisfied_alt;
+      case 'Medium':
+        return Icons.sentiment_neutral;
+      case 'Hard':
+        return Icons.sentiment_very_dissatisfied;
+      default:
+        return Icons.help_outline;
+    }
+  }
+
+  Widget _buildTimerOption(String timer, Color color) {
+    final bool isSelected = _selectedTimer == timer;
+    return Container(
+      height: 90,
+      width: (MediaQuery.of(context).size.width - 72) / 2,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: isSelected ? color : color.withOpacity(0.2),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(28),
+          onTap: () => setState(() => _selectedTimer = timer),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.timer,
+                color: color,
+                size: 28,
+              ),
+              SizedBox(height: 8),
+              Text(
+                timer == 'No Timer' ? timer : '$timer sec',
+                style: GoogleFonts.poppins(
+                  color: color,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
