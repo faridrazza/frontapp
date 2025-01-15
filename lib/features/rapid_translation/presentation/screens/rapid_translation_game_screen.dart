@@ -360,16 +360,32 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   }
 
   Widget _buildChatArea() {
-    return ListView.builder(
-      controller: _scrollController,
-      padding: EdgeInsets.only(bottom: 100),
-      itemCount: _chatMessages.length,
-      itemBuilder: (context, index) {
-        return ChatBubble(
-          message: _chatMessages[index],
-          onNextSentence: _chatMessages[index].isButton ? _getNextSentence : null,
-        );
-      },
+    return Container(
+      color: Color(0xFF121212),
+      child: ListView.builder(
+        controller: _scrollController,
+        padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+        physics: BouncingScrollPhysics(),
+        itemCount: _chatMessages.length,
+        itemBuilder: (context, index) {
+          final message = _chatMessages[index];
+          
+          return AnimatedSize(
+            duration: Duration(milliseconds: 200),
+            child: AnimatedOpacity(
+              duration: Duration(milliseconds: 200),
+              opacity: message.isLoading ? 0.7 : 1.0,
+              child: Padding(
+                padding: EdgeInsets.only(bottom: 8),
+                child: ChatBubble(
+                  message: message,
+                  onNextSentence: message.isButton ? _getNextSentence : null,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -377,14 +393,14 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: Color(0xFF1E1E1E),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 10,
-            offset: Offset(0, -2),
-          ),
-        ],
+        color: Color(0xFF121212),
+        // boxShadow: [
+        //   BoxShadow(
+        //     color: Colors.black26,
+        //     blurRadius: 10,
+        //     offset: Offset(0, -2),
+        //   ),
+        // ],
       ),
       child: Row(
         children: [

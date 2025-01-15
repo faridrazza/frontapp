@@ -126,6 +126,7 @@ flutter:
     - assets/images/google_icon.png
     - assets/images/github_icon.png
     - assets/images/iconai.png
+    - assets/images/chat_bg_pattern.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
