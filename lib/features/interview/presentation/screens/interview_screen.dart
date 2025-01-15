@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../bloc/interview_bloc.dart';
-import '../bloc/interview_event.dart';
-import '../bloc/interview_state.dart';
-import '../widgets/role_selection_form.dart';
-import '../widgets/interview_message_bubble.dart';
-import '../../../../core/utils/audio_utils.dart';
+import 'package:video_player/video_player.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'interview_feedback_screen.dart';
 import 'package:logger/logger.dart';
-import 'package:video_player/video_player.dart';
+
+// Import local widgets
+import '../widgets/voice_input_button.dart';
+import '../widgets/interview_message_bubble.dart';
+import '../widgets/role_selection_form.dart';
+
+// Import other local files
+import '../bloc/interview_bloc.dart';
+import '../bloc/interview_state.dart';
+import '../bloc/interview_event.dart';
 import '../../domain/models/interview_message.dart';
+import '../../../../core/utils/audio_utils.dart';
+import 'interview_feedback_screen.dart';
 
 class InterviewScreen extends StatefulWidget {
   const InterviewScreen({Key? key}) : super(key: key);
@@ -313,17 +318,24 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
       ),
       body: Column(
         children: [
-          // Video Section (40% height)
+          // Video Section (30% height)
           SizedBox(
-            height: MediaQuery.of(context).size.height * 0.4,
-            child: _isVideoInitialized
-                ? AspectRatio(
-                    aspectRatio: _videoController.value.aspectRatio,
-                    child: VideoPlayer(_videoController),
-                  )
-                : Center(child: CircularProgressIndicator()),
+            height: MediaQuery.of(context).size.height * 0.3,
+            child: Container(
+              color: Colors.black,
+              child: _isVideoInitialized
+                  ? AspectRatio(
+                      aspectRatio: _videoController.value.aspectRatio,
+                      child: VideoPlayer(_videoController),
+                    )
+                  : Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC8F235)),
+                      ),
+                    ),
+            ),
           ),
-          // Chat Section (60% height)
+          // Chat Section (70% height)
           Expanded(
             child: BlocConsumer<InterviewBloc, InterviewState>(
               listener: (context, state) {
@@ -384,7 +396,7 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
                             final message = state.session.messages[index];
                             return InterviewMessageBubble(
                               message: message,
-                              isPlaying: _isAudioPlaying,
+                              isPlaying: _isAudioPlaying && _currentMessage == message,
                               onPlayMedia: _handleMediaPlayback,
                             );
                           },
@@ -397,7 +409,16 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
                             valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC8F235)),
                           ),
                         ),
-                      _buildInputArea(state),
+                      // Voice input button at the bottom
+                      Padding(
+                        padding: EdgeInsets.all(8),
+                        child: VoiceInputButton(
+                          onRecordingComplete: (response) {
+                            context.read<InterviewBloc>().add(SendResponse(response));
+                          },
+                          isProcessing: state.isProcessing,
+                        ),
+                      ),
                     ],
                   );
                 }
