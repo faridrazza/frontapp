@@ -112,18 +112,18 @@ flutter:
     - assets/images/reminder.png
     - assets/images/share.png
     - assets/images/support.png
-    - assets/images/design.png
+    # - assets/images/design.png
     - assets/images/aiorb.png
-    - assets/images/waveleft.png
+    # - assets/images/waveleft.png
     - assets/images/AI.png
     - assets/images/aichat.png
-    - assets/images/role_play_character.png
+    # - assets/images/role_play_character.png
     - assets/images/app_icon3.png
     # - assets/images/app_icon.png
     # - assets/images/record.png
     # - assets/images/ai_avatar.png
-    - assets/images/waveai.png
-    - assets/images/google_icon.png
+    # - assets/images/waveai.png
+    # - assets/images/google_icon.png
     - assets/images/github_icon.png
     - assets/images/iconai.png
 
