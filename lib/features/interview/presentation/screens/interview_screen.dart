@@ -37,6 +37,8 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
   late VideoPlayerController _videoController;
   bool _isVideoInitialized = false;
   InterviewMessage? _currentMessage;
+  final TextEditingController _roleController = TextEditingController();
+  String _selectedExperience = 'fresher';
 
   @override
   void initState() {
@@ -286,230 +288,270 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: Text(
-          'AI Interview',
-          style: GoogleFonts.inter(
-            color: Color(0xFFC8F235),
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        elevation: 0,
-        actions: [
-          BlocBuilder<InterviewBloc, InterviewState>(
-            builder: (context, state) {
-              if (state is InterviewInProgress) {
-                return TextButton(
-                  onPressed: () {
-                    context.read<InterviewBloc>().add(EndInterview());
-                  },
-                  child: Text(
-                    'End Interview',
-                    style: TextStyle(color: Color(0xFFC8F235)),
-                  ),
-                );
+      backgroundColor: Color(0xFF010101),
+      body: SafeArea(
+        child: BlocConsumer<InterviewBloc, InterviewState>(
+          listener: (context, state) {
+            if (state is InterviewCompleted) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => InterviewFeedbackScreen(feedback: state.feedback),
+                ),
+              );
+            } else if (state is InterviewInProgress) {
+              if (state.session.messages.isNotEmpty) {
+                final latestMessage = state.session.messages.last;
+                if (latestMessage.isAI && latestMessage.audioBuffer != null) {
+                  _handleMediaPlayback(latestMessage);
+                }
+                Future.delayed(Duration(milliseconds: 100), () {
+                  _scrollToBottom();
+                });
               }
-              return SizedBox.shrink();
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Video Section (30% height)
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.3,
-            child: Container(
-              color: Colors.black,
-              child: _isVideoInitialized
-                  ? AspectRatio(
-                      aspectRatio: _videoController.value.aspectRatio,
-                      child: VideoPlayer(_videoController),
-                    )
-                  : Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC8F235)),
-                      ),
-                    ),
-            ),
-          ),
-          // Chat Section (70% height)
-          Expanded(
-            child: BlocConsumer<InterviewBloc, InterviewState>(
-              listener: (context, state) {
-                if (state is InterviewCompleted) {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => InterviewFeedbackScreen(feedback: state.feedback),
-                    ),
-                  );
-                } else if (state is InterviewInProgress) {
-                  if (state.session.messages.isNotEmpty) {
-                    final latestMessage = state.session.messages.last;
-                    if (latestMessage.isAI && latestMessage.audioBuffer != null) {
-                      _handleMediaPlayback(latestMessage);
-                    }
-                    Future.delayed(Duration(milliseconds: 100), () {
-                      _scrollToBottom();
-                    });
-                  }
-                }
-              },
-              builder: (context, state) {
-                if (state is InterviewInitial) {
-                  return Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(16),
-                      child: RoleSelectionForm(
-                        onSubmit: (role, experienceLevel) {
-                          context.read<InterviewBloc>().add(
-                            StartInterview(
-                              role: role,
-                              experienceLevel: experienceLevel,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  );
-                }
-
-                if (state is InterviewLoading) {
-                  return Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC8F235)),
-                    ),
-                  );
-                }
-
-                if (state is InterviewInProgress) {
-                  return Column(
-                    children: [
-                      Expanded(
-                        child: ListView.builder(
-                          controller: _scrollController,
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          itemCount: state.session.messages.length,
-                          itemBuilder: (context, index) {
-                            final message = state.session.messages[index];
-                            return InterviewMessageBubble(
-                              message: message,
-                              isPlaying: _isAudioPlaying && _currentMessage == message,
-                              onPlayMedia: _handleMediaPlayback,
-                            );
-                          },
-                        ),
-                      ),
-                      if (state.isProcessing)
-                        Padding(
-                          padding: EdgeInsets.all(16),
+            }
+          },
+          builder: (context, state) {
+            if (state is InterviewInitial) {
+              return _buildSetupScreen();
+            }
+            return Column(
+              children: [
+                // Video Section
+                Container(
+                  height: MediaQuery.of(context).size.height * 0.3,
+                  color: Colors.black,
+                  child: _isVideoInitialized
+                      ? AspectRatio(
+                          aspectRatio: _videoController.value.aspectRatio,
+                          child: VideoPlayer(_videoController),
+                        )
+                      : Center(
                           child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC8F235)),
+                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC6F432)),
                           ),
                         ),
-                      // Voice input button at the bottom
-                      Padding(
-                        padding: EdgeInsets.all(8),
-                        child: VoiceInputButton(
-                          onRecordingComplete: (response) {
-                            context.read<InterviewBloc>().add(SendResponse(response));
-                          },
-                          isProcessing: state.isProcessing,
-                        ),
-                      ),
-                    ],
-                  );
-                }
-
-                if (state is InterviewError) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Error: ${state.message}',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                        SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () {
-                            context.read<InterviewBloc>().add(ResetInterview());
-                          },
-                          child: Text('Try Again'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return SizedBox.shrink();
-              },
-            ),
-          ),
-        ],
+                ),
+                // Chat Section
+                Expanded(
+                  child: _buildChatSection(state),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildInputArea(InterviewInProgress state) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        border: Border(
-          top: BorderSide(color: Colors.grey[800]!),
+  Widget _buildSetupScreen() {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.only(
+          top: 24,
+          left: 24,
+          right: 24,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title with Gradient
+            ShaderMask(
+              shaderCallback: (bounds) => LinearGradient(
+                colors: [Color(0xFFC6F432), Color(0xFF90E0EF)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ).createShader(bounds),
+              child: Text(
+                'Interview\nPreparation',
+                style: GoogleFonts.poppins(
+                  fontSize: 32,
+                  height: 1.2,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            SizedBox(height: 32),
+            
+            // Role Selection
+            Text(
+              'Select Role',
+              style: GoogleFonts.poppins(
+                color: Color(0xFFC6F432),
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height: 16),
+            _buildRoleTextField(),
+            
+            SizedBox(height: 32),
+            
+            // Experience Level
+            Text(
+              'Experience Level',
+              style: GoogleFonts.poppins(
+                color: Color(0xFF90E0EF),
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height: 16),
+            _buildExperienceLevelSelector(),
+            
+            SizedBox(height: 32),
+            
+            // Start Button
+            Container(
+              width: double.infinity,
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFC6F432), Color(0xFF90E0EF)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0xFFC6F432).withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ElevatedButton(
+                onPressed: _canStartInterview() ? _startInterview : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                ),
+                child: Text(
+                  'Start Interview',
+                  style: GoogleFonts.poppins(
+                    color: Colors.black,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
+          ],
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          GestureDetector(
-            onTap: _toggleListening,
-            child: AnimatedBuilder(
-              animation: _pulseAnimation,
-              builder: (context, child) {
-                return Transform.scale(
-                  scale: _isListening ? _pulseAnimation.value : 1.0,
-                  child: Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _isListening ? Colors.red : Color(0xFFC8F235),
-                      boxShadow: [
-                        BoxShadow(
-                          color: (_isListening ? Colors.red : Color(0xFFC8F235))
-                              .withOpacity(0.3),
-                          blurRadius: 10,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Icon(
-                          _isListening ? Icons.mic : Icons.mic_none,
-                          color: Colors.black,
-                          size: 30,
-                        ),
-                        if (_isListening)
-                          CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+    );
+  }
+
+  Widget _buildRoleTextField() {
+    return Container(
+      height: 60,
+      decoration: BoxDecoration(
+        color: Color(0xFFC6F432).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Color(0xFFC6F432).withOpacity(0.3),
+        ),
+      ),
+      child: TextField(
+        controller: _roleController,
+        style: GoogleFonts.poppins(color: Colors.white),
+        decoration: InputDecoration(
+          hintText: 'e.g., Flutter Developer',
+          hintStyle: GoogleFonts.poppins(
+            color: Colors.white.withOpacity(0.5),
           ),
-        ],
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 20),
+          prefixIcon: Icon(
+            Icons.work_outline,
+            color: Color(0xFFC6F432),
+          ),
+        ),
       ),
     );
+  }
+
+  Widget _buildExperienceLevelSelector() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildExperienceOption('Fresher', 'fresher', Color(0xFF7B61FF)),
+        ),
+        SizedBox(width: 16),
+        Expanded(
+          child: _buildExperienceOption('Experienced', 'experienced', Color(0xFFFEC4DD)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExperienceOption(String label, String value, Color color) {
+    final bool isSelected = _selectedExperience == value;
+    return Container(
+      height: 80,
+      decoration: BoxDecoration(
+        color: isSelected ? color.withOpacity(0.2) : color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isSelected ? color : color.withOpacity(0.2),
+          width: isSelected ? 2 : 1,
+        ),
+        boxShadow: isSelected ? [
+          BoxShadow(
+            color: color.withOpacity(0.3),
+            blurRadius: 12,
+            spreadRadius: 1,
+            offset: Offset(0, 4),
+          ),
+        ] : [],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => setState(() => _selectedExperience = value),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                value == 'fresher' ? Icons.school : Icons.work,
+                color: isSelected ? color : color.withOpacity(0.7),
+                size: 24,
+              ),
+              SizedBox(height: 8),
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  color: isSelected ? color : color.withOpacity(0.7),
+                  fontSize: 14,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  bool _canStartInterview() {
+    return _roleController.text.isNotEmpty && _selectedExperience.isNotEmpty;
+  }
+
+  void _startInterview() {
+    if (_canStartInterview()) {
+      context.read<InterviewBloc>().add(
+        StartInterview(
+          role: _roleController.text,
+          experienceLevel: _selectedExperience,
+        ),
+      );
+    }
   }
 
   @override
@@ -521,5 +563,94 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
     AudioUtils.stopAudio();
     _videoController.dispose();
     super.dispose();
+  }
+
+  Widget _buildChatSection(InterviewState state) {
+    if (state is InterviewLoading) {
+      return Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC6F432)),
+        ),
+      );
+    }
+
+    if (state is InterviewInProgress) {
+      return Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: EdgeInsets.symmetric(vertical: 16),
+              itemCount: state.session.messages.length,
+              itemBuilder: (context, index) {
+                final message = state.session.messages[index];
+                return InterviewMessageBubble(
+                  message: message,
+                  isPlaying: _isAudioPlaying && _currentMessage == message,
+                  onPlayMedia: _handleMediaPlayback,
+                );
+              },
+            ),
+          ),
+          if (state.isProcessing)
+            Padding(
+              padding: EdgeInsets.all(16),
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC6F432)),
+              ),
+            ),
+          // Bottom controls with mic and end button
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.8),
+              border: Border(
+                top: BorderSide(
+                  color: Color(0xFFC6F432).withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // End Interview Button
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFFC6F432), Color(0xFF90E0EF)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: TextButton(
+                    onPressed: () {
+                      context.read<InterviewBloc>().add(EndInterview());
+                    },
+                    child: Text(
+                      'End Interview',
+                      style: GoogleFonts.poppins(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                // Voice Input Button
+                VoiceInputButton(
+                  onRecordingComplete: (response) {
+                    context.read<InterviewBloc>().add(SendResponse(response));
+                  },
+                  isProcessing: state.isProcessing,
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    return SizedBox.shrink();
   }
 }

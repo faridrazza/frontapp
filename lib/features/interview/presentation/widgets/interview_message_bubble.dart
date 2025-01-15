@@ -16,70 +16,116 @@ class InterviewMessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: message.isAI ? Alignment.centerLeft : Alignment.centerRight,
-      child: Container(
-        margin: EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 4,
-        ),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
-        ),
-        decoration: BoxDecoration(
-          color: message.isAI ? Color(0xFFA25BE3) : Color(0xFF3369FF),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: message.isAI 
-                  ? Color(0xFFA25BE3).withOpacity(0.3)
-                  : Color(0xFF3369FF).withOpacity(0.3),
-              blurRadius: 8,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: EdgeInsets.all(12),
-              child: Text(
-                message.content,
-                style: GoogleFonts.inter(
-                  color: Colors.white,
-                  fontSize: 16,
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: message.isAI ? MainAxisAlignment.start : MainAxisAlignment.end,
+        children: [
+          if (message.isAI) _buildAvatarIcon(),
+          SizedBox(width: message.isAI ? 8 : 0),
+          Flexible(
+            child: Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: message.isAI 
+                    ? [Color(0xFFC6F432).withOpacity(0.1), Color(0xFF90E0EF).withOpacity(0.1)]
+                    : [Color(0xFF7B61FF).withOpacity(0.1), Color(0xFFFEC4DD).withOpacity(0.1)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: message.isAI ? Color(0xFFC6F432).withOpacity(0.2) : Color(0xFF7B61FF).withOpacity(0.2),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: (message.isAI ? Color(0xFFC6F432) : Color(0xFF7B61FF)).withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: Offset(0, 4),
+                  ),
+                ],
               ),
-            ),
-            if (message.isAI && message.audioBuffer != null)
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.only(bottom: 8, left: 8, right: 8),
-                child: ElevatedButton.icon(
-                  onPressed: isPlaying ? null : () => onPlayMedia(message),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white.withOpacity(0.2),
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    message.content,
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 14,
                     ),
                   ),
-                  icon: Icon(
-                    isPlaying ? Icons.pause : Icons.play_arrow,
-                    size: 20,
-                  ),
-                  label: Text(
-                    isPlaying ? 'Playing...' : 'Play Response',
-                    style: GoogleFonts.inter(fontSize: 14),
-                  ),
-                ),
+                  if (message.audioBuffer != null)
+                    Padding(
+                      padding: EdgeInsets.only(top: 8),
+                      child: GestureDetector(
+                        onTap: () => onPlayMedia(message),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isPlaying ? Icons.stop : Icons.play_arrow,
+                              color: Color(0xFFC6F432),
+                              size: 24,
+                            ),
+                            if (isPlaying)
+                              Container(
+                                width: 100,
+                                height: 2,
+                                margin: EdgeInsets.only(left: 8),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [Color(0xFFC6F432), Color(0xFF90E0EF)],
+                                  ),
+                                  borderRadius: BorderRadius.circular(1),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
               ),
-          ],
+            ),
+          ),
+          SizedBox(width: message.isAI ? 0 : 8),
+          if (!message.isAI) _buildUserIcon(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvatarIcon() {
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          colors: [Color(0xFFC6F432), Color(0xFF90E0EF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
       ),
+      child: Icon(Icons.smart_toy, color: Colors.black, size: 20),
+    );
+  }
+
+  Widget _buildUserIcon() {
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          colors: [Color(0xFF7B61FF), Color(0xFFFEC4DD)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Icon(Icons.person, color: Colors.black, size: 20),
     );
   }
 }
