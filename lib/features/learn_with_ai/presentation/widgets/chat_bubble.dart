@@ -12,31 +12,61 @@ class ChatBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     return Align(
       alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Column(
-        crossAxisAlignment: message.isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          Container(
-            margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: message.isUser ? Color(0xFFA25BE3) : Color(0xFF3369FF),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              message.text.isNotEmpty ? message.text : 'Error: Empty message',
-              style: GoogleFonts.inter(
-                color: Colors.white,
-                fontSize: 16,
-              ),
-            ),
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
+        ),
+        margin: EdgeInsets.symmetric(vertical: 6),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: _getBubbleColor().withOpacity(0.1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: _getBubbleColor().withOpacity(0.2),
+            width: 1,
           ),
-          if (!message.isUser)
-            Padding(
-              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
-              child: TextToSpeechButton(text: message.text),
+          boxShadow: [
+            BoxShadow(
+              color: _getBubbleColor().withOpacity(0.1),
+              blurRadius: 8,
+              offset: Offset(0, 2),
             ),
-        ],
+          ],
+        ),
+        child: _buildContent(),
       ),
+    );
+  }
+
+  Color _getBubbleColor() {
+    if (!message.isUser) {
+      return Color(0xFFC6F432); // AI/System color
+    } else if (message.isCorrect) {
+      return Color(0xFF90E0EF); // Correct answer color
+    } else if (message.isError) {
+      return Color(0xFFFEC4DD); // Error color
+    } else {
+      return Color(0xFF7B61FF); // User message color
+    }
+  }
+
+  Widget _buildContent() {
+    return Column(
+      crossAxisAlignment: message.isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        Text(
+          message.text.isNotEmpty ? message.text : 'Error: Empty message',
+          style: GoogleFonts.inter(
+            color: Colors.white,
+            fontSize: 16,
+          ),
+        ),
+        if (!message.isUser) // Show TTS button only for AI messages
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: TextToSpeechButton(text: message.text),
+          ),
+      ],
     );
   }
 }

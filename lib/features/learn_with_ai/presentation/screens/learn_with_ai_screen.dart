@@ -70,35 +70,54 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> with SingleTicker
   }
 
   Widget _buildHeader() {
-    return Padding(
+    return Container(
       padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.white.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         children: [
+          IconButton(
+            icon: Icon(Icons.arrow_back, color: Color(0xFFC6F432)),
+            onPressed: () => Navigator.pop(context),
+          ),
+          SizedBox(width: 12),
           Container(
             width: 40,
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              image: DecorationImage(
-                image: AssetImage('assets/images/AI.png'),
-                fit: BoxFit.cover,
+              gradient: LinearGradient(
+                colors: [Color(0xFFC6F432), Color(0xFF90E0EF)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Color(0xFFC6F432).withOpacity(0.2),
                   blurRadius: 10,
                   spreadRadius: 2,
                 ),
               ],
             ),
+            child: Center(
+              child: Icon(Icons.school, color: Colors.black, size: 24),
+            ),
           ),
           SizedBox(width: 12),
           Text(
-            'Hiba AI',
-            style: GoogleFonts.inter(
+            'Learn with AI',
+            style: GoogleFonts.poppins(
               color: Color(0xFFC6F432),
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -132,47 +151,80 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> with SingleTicker
   }
 
   Widget _buildInputArea() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.white.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, -2),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           Expanded(
-            child: TextField(
-              controller: _textController,
-              style: TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: _isListening ? 'Listening...' : 'Type your message',
-                hintStyle: TextStyle(color: Colors.grey),
-                filled: true,
-                fillColor: Colors.black,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide.none,
-                ),
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.send, color: Color(0xFFC6F432)),
-                  onPressed: () => _sendMessage(_textController.text),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(25),
+                border: Border.all(
+                  color: Color(0xFFC6F432).withOpacity(0.2),
+                  width: 1,
                 ),
               ),
-              onSubmitted: _sendMessage,
+              child: TextField(
+                controller: _textController,
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+                decoration: InputDecoration(
+                  hintText: _isListening ? 'Listening...' : 'Type your message',
+                  hintStyle: GoogleFonts.poppins(
+                    color: Colors.white.withOpacity(0.5),
+                    fontSize: 16,
+                  ),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.send, color: Color(0xFFC6F432)),
+                    onPressed: () => _sendMessage(_textController.text),
+                  ),
+                ),
+                onSubmitted: _sendMessage,
+              ),
             ),
           ),
-          SizedBox(width: 8),
+          SizedBox(width: 12),
           GestureDetector(
             onTap: _toggleListening,
             child: AnimatedBuilder(
               animation: _micAnimationController,
               builder: (context, child) {
                 return Container(
-                  width: 50 + (_isListening ? _micAnimationController.value * 10 : 0),
-                  height: 50 + (_isListening ? _micAnimationController.value * 10 : 0),
+                  width: 48 + (_isListening ? _micAnimationController.value * 8 : 0),
+                  height: 48 + (_isListening ? _micAnimationController.value * 8 : 0),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _isListening ? Colors.red : Color(0xFFC6F432),
+                    gradient: LinearGradient(
+                      colors: [
+                        _isListening ? Colors.red : Color(0xFFC6F432),
+                        _isListening ? Colors.redAccent : Color(0xFF90E0EF),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: (_isListening ? Colors.red : Color(0xFFC6F432)).withOpacity(0.3),
-                        blurRadius: 10,
+                        blurRadius: 12,
                         spreadRadius: 2,
                       ),
                     ],
@@ -180,6 +232,7 @@ class _LearnWithAiScreenState extends State<LearnWithAiScreen> with SingleTicker
                   child: Icon(
                     Icons.mic,
                     color: Colors.black,
+                    size: 24,
                   ),
                 );
               },
