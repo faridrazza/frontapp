@@ -1,46 +1,57 @@
-import 'package:flutter_sound/flutter_sound.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'dart:convert';
-import 'dart:typed_data';
+import 'dart:io';
+import 'package:just_audio/just_audio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:logger/logger.dart';
 
 class AudioUtils {
-  static FlutterSoundRecorder? _recorder;
-  static FlutterSoundPlayer? _player;
+  static AudioPlayer? _audioPlayer;
+  static final Logger _logger = Logger();
 
-  static Future<void> initRecorder() async {
-    _recorder = FlutterSoundRecorder();
-    await _recorder!.openRecorder();
-    await Permission.microphone.request();
-  }
-
-  static Future<void> startRecording() async {
-    await _recorder!.startRecorder(toFile: 'temp.aac');
-  }
-
-  static Future<String?> stopRecording() async {
-    return await _recorder!.stopRecorder();
-  }
-
-  static Future<void> playAudio(String audioBase64) async {
+  static Future<void> playAudio(String audioBuffer, {Function? onComplete}) async {
     try {
-      _player = FlutterSoundPlayer();
-      await _player!.openPlayer();
-      final audioData = base64Decode(audioBase64);
-      await _player!.startPlayer(fromDataBuffer: audioData);
+      // Stop any existing playback
+      await stopAudio();
+      
+      // Create new player instance
+      _audioPlayer = AudioPlayer();
+      
+      // Convert base64 to bytes
+      final bytes = base64Decode(audioBuffer);
+      
+      // Create temporary file
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File('${tempDir.path}/temp_audio.mp3');
+      await tempFile.writeAsBytes(bytes);
+      
+      // Set up completion listener
+      _audioPlayer!.playerStateStream.listen((state) {
+        if (state.processingState == ProcessingState.completed) {
+          onComplete?.call();
+        }
+      });
+
+      // Play audio
+      await _audioPlayer!.setFilePath(tempFile.path);
+      await _audioPlayer!.play();
     } catch (e) {
-      print("Error playing audio: $e");
+      _logger.e('Error playing audio: $e');
+      onComplete?.call();
+      rethrow;
     }
   }
 
   static Future<void> stopAudio() async {
     try {
-      if (_player != null && _player!.isPlaying) {
-        await _player!.stopPlayer();
-        await _player!.closePlayer();
-        _player = null;
-      }
+      await _audioPlayer?.stop();
+      await _audioPlayer?.dispose();
+      _audioPlayer = null;
     } catch (e) {
-      print("Error stopping audio: $e");
+      _logger.e('Error stopping audio: $e');
     }
+  }
+
+  static void dispose() {
+    stopAudio();
   }
 }

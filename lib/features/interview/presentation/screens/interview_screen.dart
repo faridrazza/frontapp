@@ -10,6 +10,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'interview_feedback_screen.dart';
 import 'package:logger/logger.dart';
+import 'package:video_player/video_player.dart';
+import '../../domain/models/interview_message.dart';
 
 class InterviewScreen extends StatefulWidget {
   const InterviewScreen({Key? key}) : super(key: key);
@@ -27,6 +29,9 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
   late Animation<double> _pulseAnimation;
   final Logger _logger = Logger();
   bool _isAudioPlaying = false;
+  late VideoPlayerController _videoController;
+  bool _isVideoInitialized = false;
+  InterviewMessage? _currentMessage;
 
   @override
   void initState() {
@@ -34,6 +39,7 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
     WidgetsBinding.instance.addObserver(this);
     _initializeSpeech();
     _initializeAnimations();
+    _initializeVideo();
   }
 
   void _initializeAnimations() {
@@ -169,11 +175,96 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
     }
   }
 
+  Future<void> _initializeVideo() async {
+    try {
+      _videoController = VideoPlayerController.asset(
+        'assets/videos/interview_avatar.mp4',
+        videoPlayerOptions: VideoPlayerOptions(
+          mixWithOthers: true,
+          allowBackgroundPlayback: true,
+        ),
+      );
+
+      await _videoController.initialize();
+      await _videoController.setLooping(true);
+      await _videoController.setVolume(0.0);
+      await _videoController.setPlaybackSpeed(1.0);
+      
+      await _videoController.play();
+      await _videoController.pause();
+      await _videoController.seekTo(Duration.zero);
+      
+      setState(() => _isVideoInitialized = true);
+    } catch (e) {
+      _logger.e('Error initializing video: $e');
+    }
+  }
+
+  Future<void> _handleMediaPlayback(InterviewMessage message) async {
+    if (!_isVideoInitialized || message.audioBuffer == null) return;
+
+    try {
+      await _stopPlayback();
+      
+      // Ensure video is ready at the start
+      await _videoController.seekTo(Duration.zero);
+      await Future.delayed(const Duration(milliseconds: 50));
+      
+      setState(() {
+        _isAudioPlaying = true;
+        _currentMessage = message;
+      });
+
+      // Start video first
+      await _videoController.play();
+      
+      // Monitor video playback
+      _videoController.addListener(_monitorVideoPlayback);
+      
+      // Play audio with completion callback
+      await AudioUtils.playAudio(
+        message.audioBuffer!,
+        onComplete: () {
+          if (mounted) {
+            _stopPlayback();
+          }
+        },
+      );
+    } catch (e) {
+      _logger.e('Error during media playback: $e');
+      _stopPlayback();
+    }
+  }
+
+  void _monitorVideoPlayback() {
+    if (!mounted) return;
+    
+    if (_isAudioPlaying && !_videoController.value.isPlaying) {
+      _videoController.play();
+    }
+    
+    if (_videoController.value.hasError) {
+      _logger.e('Video playback error: ${_videoController.value.errorDescription}');
+      _stopPlayback();
+    }
+  }
+
+  Future<void> _stopPlayback() async {
+    if (!mounted) return;
+    
+    _videoController.removeListener(_monitorVideoPlayback);
+    
+    setState(() => _isAudioPlaying = false);
+    
+    await AudioUtils.stopAudio();
+    await _videoController.pause();
+    await _videoController.seekTo(Duration.zero);
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) {
-      _stopListening();
-      AudioUtils.stopAudio();
+      _stopPlayback();
     }
   }
 
@@ -220,108 +311,123 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
           ),
         ],
       ),
-      body: BlocConsumer<InterviewBloc, InterviewState>(
-        listener: (context, state) {
-          if (state is InterviewCompleted) {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => InterviewFeedbackScreen(feedback: state.feedback),
-              ),
-            );
-          } else if (state is InterviewInProgress) {
-            if (state.session.messages.isNotEmpty) {
-              final latestMessage = state.session.messages.last;
-              if (latestMessage.isAI && latestMessage.audioBuffer != null) {
-                AudioUtils.playAudio(latestMessage.audioBuffer!);
-              }
-              Future.delayed(Duration(milliseconds: 100), () {
-                _scrollToBottom();
-              });
-            }
-          }
-        },
-        builder: (context, state) {
-          if (state is InterviewInitial) {
-            return Center(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: RoleSelectionForm(
-                  onSubmit: (role, experienceLevel) {
-                    context.read<InterviewBloc>().add(
-                      StartInterview(
-                        role: role,
-                        experienceLevel: experienceLevel,
+      body: Column(
+        children: [
+          // Video Section (40% height)
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.4,
+            child: _isVideoInitialized
+                ? AspectRatio(
+                    aspectRatio: _videoController.value.aspectRatio,
+                    child: VideoPlayer(_videoController),
+                  )
+                : Center(child: CircularProgressIndicator()),
+          ),
+          // Chat Section (60% height)
+          Expanded(
+            child: BlocConsumer<InterviewBloc, InterviewState>(
+              listener: (context, state) {
+                if (state is InterviewCompleted) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => InterviewFeedbackScreen(feedback: state.feedback),
+                    ),
+                  );
+                } else if (state is InterviewInProgress) {
+                  if (state.session.messages.isNotEmpty) {
+                    final latestMessage = state.session.messages.last;
+                    if (latestMessage.isAI && latestMessage.audioBuffer != null) {
+                      _handleMediaPlayback(latestMessage);
+                    }
+                    Future.delayed(Duration(milliseconds: 100), () {
+                      _scrollToBottom();
+                    });
+                  }
+                }
+              },
+              builder: (context, state) {
+                if (state is InterviewInitial) {
+                  return Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: RoleSelectionForm(
+                        onSubmit: (role, experienceLevel) {
+                          context.read<InterviewBloc>().add(
+                            StartInterview(
+                              role: role,
+                              experienceLevel: experienceLevel,
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
-              ),
-            );
-          }
+                    ),
+                  );
+                }
 
-          if (state is InterviewLoading) {
-            return Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC8F235)),
-              ),
-            );
-          }
-
-          if (state is InterviewInProgress) {
-            return Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    itemCount: state.session.messages.length,
-                    itemBuilder: (context, index) {
-                      final message = state.session.messages[index];
-                      return InterviewMessageBubble(
-                        message: message,
-                        isPlaying: _isAudioPlaying,
-                        onPlayAudio: message.audioBuffer != null
-                            ? () => _playAudio(message.audioBuffer!)
-                            : null,
-                      );
-                    },
-                  ),
-                ),
-                if (state.isProcessing)
-                  Padding(
-                    padding: EdgeInsets.all(16),
+                if (state is InterviewLoading) {
+                  return Center(
                     child: CircularProgressIndicator(
                       valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC8F235)),
                     ),
-                  ),
-                _buildInputArea(state),
-              ],
-            );
-          }
+                  );
+                }
 
-          if (state is InterviewError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Error: ${state.message}',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                  SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      context.read<InterviewBloc>().add(ResetInterview());
-                    },
-                    child: Text('Try Again'),
-                  ),
-                ],
-              ),
-            );
-          }
+                if (state is InterviewInProgress) {
+                  return Column(
+                    children: [
+                      Expanded(
+                        child: ListView.builder(
+                          controller: _scrollController,
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          itemCount: state.session.messages.length,
+                          itemBuilder: (context, index) {
+                            final message = state.session.messages[index];
+                            return InterviewMessageBubble(
+                              message: message,
+                              isPlaying: _isAudioPlaying,
+                              onPlayMedia: _handleMediaPlayback,
+                            );
+                          },
+                        ),
+                      ),
+                      if (state.isProcessing)
+                        Padding(
+                          padding: EdgeInsets.all(16),
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC8F235)),
+                          ),
+                        ),
+                      _buildInputArea(state),
+                    ],
+                  );
+                }
 
-          return SizedBox.shrink();
-        },
+                if (state is InterviewError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Error: ${state.message}',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                        SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.read<InterviewBloc>().add(ResetInterview());
+                          },
+                          child: Text('Try Again'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return SizedBox.shrink();
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -392,6 +498,7 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
     _stopListening();
     _scrollController.dispose();
     AudioUtils.stopAudio();
+    _videoController.dispose();
     super.dispose();
   }
 }

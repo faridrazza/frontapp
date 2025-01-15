@@ -4,14 +4,14 @@ import 'package:google_fonts/google_fonts.dart';
 
 class InterviewMessageBubble extends StatelessWidget {
   final InterviewMessage message;
-  final VoidCallback? onPlayAudio;
+  final Function(InterviewMessage) onPlayMedia;
   final bool isPlaying;
 
   const InterviewMessageBubble({
     Key? key,
     required this.message,
+    required this.onPlayMedia,
     required this.isPlaying,
-    this.onPlayAudio,
   }) : super(key: key);
 
   @override
@@ -58,7 +58,7 @@ class InterviewMessageBubble extends StatelessWidget {
                 width: double.infinity,
                 padding: EdgeInsets.only(bottom: 8, left: 8, right: 8),
                 child: ElevatedButton.icon(
-                  onPressed: isPlaying ? null : onPlayAudio,
+                  onPressed: isPlaying ? null : () => onPlayMedia(message),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white.withOpacity(0.2),
                     foregroundColor: Colors.white,
@@ -72,7 +72,7 @@ class InterviewMessageBubble extends StatelessWidget {
                     size: 20,
                   ),
                   label: Text(
-                    isPlaying ? 'Playing...' : 'Play Audio',
+                    isPlaying ? 'Playing...' : 'Play Response',
                     style: GoogleFonts.inter(fontSize: 14),
                   ),
                 ),
