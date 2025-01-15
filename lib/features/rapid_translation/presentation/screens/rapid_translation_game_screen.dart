@@ -81,13 +81,7 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   Widget _buildHeader() {
     return Container(
       padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF1E1E1E), Color(0xFF010101)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
+      color: Color(0xFF121212),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -221,34 +215,16 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   }
 
   Widget _buildChatArea() {
-    return Stack(
-      children: [
-        ListView.builder(
-          controller: _scrollController,
-          padding: EdgeInsets.only(bottom: 100),
-          itemCount: _chatMessages.length,
-          itemBuilder: (context, index) {
-            return ChatBubble(
-              message: _chatMessages[index],
-              onNextSentence: _chatMessages[index].isButton ? _getNextSentence : null,
-            );
-          },
-        ),
-        if (_showIndicator)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 2,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFFC6F432), Color(0xFF90E0EF)],
-                ),
-              ),
-            ),
-          ),
-      ],
+    return ListView.builder(
+      controller: _scrollController,
+      padding: EdgeInsets.only(bottom: 100),
+      itemCount: _chatMessages.length,
+      itemBuilder: (context, index) {
+        return ChatBubble(
+          message: _chatMessages[index],
+          onNextSentence: _chatMessages[index].isButton ? _getNextSentence : null,
+        );
+      },
     );
   }
 
@@ -630,10 +606,10 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
                 Container(
                   decoration: BoxDecoration(
                     color: Color(0xFF2A2A2A),
-                    borderRadius: BorderRadius.circular(25),
-                    border: Border.all(
-                      color: Color(0xFFC6F432).withOpacity(0.3),
-                    ),
+                    // borderRadius: BorderRadius.circular(25),
+                    // border: Border.all(
+                    //   color: Color(0xFFC6F432).withOpacity(0.3),
+                    // ),
                   ),
                   child: TextField(
                     controller: _textController,
