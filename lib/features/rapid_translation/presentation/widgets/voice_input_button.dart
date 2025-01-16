@@ -26,7 +26,7 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
   String _accumulatedText = '';
   bool _hasSubmitted = false;
   Timer? _pauseTimer;
-  static const int _pauseThreshold = 1500; // Reduced to 1.5 seconds for better responsiveness
+  static const int _pauseThreshold = 1800; // Reduced to 1.5 seconds for better responsiveness
 
   @override
   void dispose() {
@@ -37,6 +37,12 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
   void _handleSpeechUpdate(String liveText, String finalText, bool isListening) {
     _logger.i('Speech status - Live: $liveText, Final: $finalText, Listening: $isListening');
     
+    // Don't update state if we should stop recording
+    if (widget.shouldStopRecording && isListening) {
+      _handleRecordingStop();
+      return;
+    }
+
     setState(() {
       // Update listening state
       if (_isListening != isListening) {
@@ -113,9 +119,13 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
   @override
   void didUpdateWidget(VoiceInputButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Check if we should stop recording
-    if (widget.shouldStopRecording && _isListening) {
+    // Force stop recording when shouldStopRecording changes to true
+    if (!oldWidget.shouldStopRecording && widget.shouldStopRecording && _isListening) {
       _handleRecordingStop();
+      // Force the SpeechToTextUltra widget to reset
+      setState(() {
+        _isListening = false;
+      });
     }
   }
 

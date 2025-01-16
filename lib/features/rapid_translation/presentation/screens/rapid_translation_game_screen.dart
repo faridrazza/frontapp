@@ -549,12 +549,17 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   }
 
   void _handleTimeUp() async {
-    if (!mounted) return; // Check if the widget is still in the tree
+    if (!mounted) return;
+    
+    setState(() {
+      _shouldStopVoiceInput = true; // Ensure microphone stops
+    });
+
     try {
       final Map<String, dynamic> response = await _apiService.timeUp(_gameSessionId);
       _logger.i('Time up response: $response');
 
-      if (mounted) { // Check again before calling setState
+      if (mounted) {
         setState(() {
           _chatMessages.add(ChatMessage(
             text: 'Time\'s up!',
@@ -574,7 +579,12 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
 
         // Add a slight delay before getting the next sentence
         Future.delayed(Duration(seconds: 2), () {
-          if (mounted) _getNextSentence();
+          if (mounted) {
+            setState(() {
+              _shouldStopVoiceInput = false; // Reset for next sentence
+            });
+            _getNextSentence();
+          }
         });
       }
     } catch (e) {
@@ -586,10 +596,10 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
             isSystem: true,
             isError: true,
           ));
-        });
-        // Even if there's an error, try to get the next sentence
-        Future.delayed(Duration(seconds: 2), () {
-          if (mounted) _getNextSentence();
+          // Even if there's an error, try to get the next sentence
+          Future.delayed(Duration(seconds: 2), () {
+            if (mounted) _getNextSentence();
+          });
         });
       }
     }
