@@ -6,11 +6,13 @@ import 'dart:async';
 class VoiceInputButton extends StatefulWidget {
   final Function(String) onRecordingComplete;
   final bool isProcessing;
+  final bool shouldStopRecording;
 
   const VoiceInputButton({
     Key? key,
     required this.onRecordingComplete,
     this.isProcessing = false,
+    this.shouldStopRecording = false,
   }) : super(key: key);
 
   @override
@@ -105,6 +107,15 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
       // Reset state
       _currentResponse = '';
       _accumulatedText = '';
+    }
+  }
+
+  @override
+  void didUpdateWidget(VoiceInputButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Check if we should stop recording
+    if (widget.shouldStopRecording && _isListening) {
+      _handleRecordingStop();
     }
   }
 

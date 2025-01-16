@@ -40,6 +40,7 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   int _remainingTime = 0;
   bool _isPaused = false;
   int _remainingTimeWhenPaused = 0;
+  bool _shouldStopVoiceInput = false;
 
   @override
   void initState() {
@@ -384,8 +385,9 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
         children: [
           VoiceInputButton(
             isProcessing: _isLoading,
+            shouldStopRecording: _shouldStopVoiceInput,
             onRecordingComplete: (String text) {
-              if (text.isNotEmpty) {
+              if (text.isNotEmpty && !_shouldStopVoiceInput) {
                 setState(() {
                   _chatMessages.add(ChatMessage(
                     text: text,
@@ -475,6 +477,9 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
 
   Future<void> _getNextSentence() async {
     if (_isPaused) return;
+    setState(() {
+      _shouldStopVoiceInput = false; // Reset when getting new sentence
+    });
     _logger.i('Getting next sentence');
     try {
       final response = await _apiService.getNextSentence(_gameSessionId);
@@ -520,19 +525,24 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   void _startTimer() {
     if (_selectedTimer != 'No Timer' && !_isPaused) {
       _timer?.cancel();
-      _remainingTime = int.parse(_selectedTimer); // Set initial time
+      _remainingTime = int.parse(_selectedTimer);
+      setState(() {
+        _shouldStopVoiceInput = false; // Reset when starting timer
+      });
+      
       _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-        if (mounted) { // Check if the widget is still in the tree
+        if (mounted) {
           setState(() {
             if (_remainingTime > 0) {
               _remainingTime--;
             } else {
               _timer?.cancel();
+              _shouldStopVoiceInput = true; // Set to true when timer expires
               _handleTimeUp();
             }
           });
         } else {
-          _timer?.cancel(); // Cancel the timer if the widget is no longer in the tree
+          _timer?.cancel();
         }
       });
     }
