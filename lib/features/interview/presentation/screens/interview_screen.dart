@@ -365,14 +365,14 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
               child: Text(
                 'Interview\nPreparation',
                 style: GoogleFonts.poppins(
-                  fontSize: 32,
+                  fontSize: 45,
                   height: 1.2,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
             ),
-            SizedBox(height: 32),
+            SizedBox(height: 50),
             
             // Role Selection
             Text(
@@ -386,7 +386,7 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
             SizedBox(height: 16),
             _buildRoleTextField(),
             
-            SizedBox(height: 32),
+            SizedBox(height: 40),
             
             // Experience Level
             Text(
@@ -465,27 +465,36 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
           ),
         ],
       ),
-      child: TextField(
-        controller: _roleController,
-        style: GoogleFonts.poppins(
-          color: Colors.white,
-          fontSize: 16,
-        ),
-        decoration: InputDecoration(
-          hintText: 'e.g., Flutter Developer',
-          hintStyle: GoogleFonts.poppins(
-            color: Colors.white.withOpacity(0.5),
+      child: Center(
+        child: TextField(
+          controller: _roleController,
+          style: GoogleFonts.poppins(
+            color: Colors.white,
             fontSize: 16,
+            height: 1.5,
           ),
-          prefixIcon: Icon(
-            Icons.work_outline,
-            color: Color(0xFFC6F432),
-            size: 20,
+          decoration: InputDecoration(
+            hintText: 'e.g., Java Developer',
+            hintStyle: GoogleFonts.poppins(
+              color: Colors.white.withOpacity(0.5),
+              fontSize: 16,
+              height: 1.5,
+            ),
+            prefixIcon: Padding(
+              padding: EdgeInsets.only(left: 16, right: 8),
+              child: Icon(
+                Icons.work_outline,
+                color: Color(0xFFC6F432),
+                size: 20,
+              ),
+            ),
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 20),
+            isDense: true,
           ),
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 20),
+          textAlignVertical: TextAlignVertical.center,
         ),
       ),
     );
