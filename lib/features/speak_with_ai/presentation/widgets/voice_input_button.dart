@@ -1,92 +1,86 @@
 import 'package:flutter/material.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:speech_to_text_ultra/speech_to_text_ultra.dart';
 import '../../../../core/utils/audio_utils.dart';
 import 'package:logger/logger.dart';
 
 class VoiceInputButton extends StatefulWidget {
   final Function(String) onRecordingComplete;
 
-  VoiceInputButton({required this.onRecordingComplete});
+  const VoiceInputButton({
+    Key? key,
+    required this.onRecordingComplete,
+  }) : super(key: key);
 
   @override
   _VoiceInputButtonState createState() => _VoiceInputButtonState();
 }
 
 class _VoiceInputButtonState extends State<VoiceInputButton> {
-  late stt.SpeechToText _speech;
-  bool _isListening = false;
   final Logger _logger = Logger();
-
-  @override
-  void initState() {
-    super.initState();
-    _speech = stt.SpeechToText();
-    _logger.i('VoiceInputButton initialized');
-  }
-
-  void _listen() async {
-    _logger.i('_listen method called');
-    if (!_isListening) {
-      _logger.i('Attempting to initialize speech recognition');
-      bool available = await _speech.initialize(
-        onStatus: (status) {
-          _logger.i('Speech recognition status: $status');
-          print('Speech recognition status: $status');
-        },
-        onError: (errorNotification) {
-          _logger.e('Speech recognition error: ${errorNotification.errorMsg}');
-          print('Speech recognition error: $errorNotification');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: ${errorNotification.errorMsg}')),
-          );
-        },
-      );
-      _logger.i('Speech recognition available: $available');
-      if (available) {
-        setState(() => _isListening = true);
-        _logger.i('Starting to listen');
-        _speech.listen(
-          onResult: (result) {
-            _logger.i('Speech recognition result: ${result.recognizedWords}');
-            if (result.finalResult) {
-              _logger.i('Final result received: ${result.recognizedWords}');
-              widget.onRecordingComplete(result.recognizedWords);
-              setState(() => _isListening = false);
-            }
-          },
-        );
-      } else {
-        _logger.w('Speech recognition not available');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Speech recognition not available')),
-        );
-      }
-    } else {
-      _logger.i('Stopping speech recognition');
-      setState(() => _isListening = false);
-      _speech.stop();
-    }
-  }
+  bool _isListening = false;
+  String _currentResponse = '';
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        _logger.i('Voice input button tapped');
-        _listen();
-      },
       child: Container(
         width: 60,
         height: 60,
         decoration: BoxDecoration(
-          color: _isListening ? Colors.red : Color(0xFFC6F432),
           shape: BoxShape.circle,
+          color: _isListening ? Colors.red : Color(0xFFC6F432),
+          boxShadow: [
+            BoxShadow(
+              color: (_isListening ? Colors.red : Color(0xFFC6F432)).withOpacity(0.3),
+              blurRadius: 10,
+              spreadRadius: 2,
+            ),
+          ],
         ),
-        child: Icon(
-          _isListening ? Icons.mic : Icons.mic_none,
-          color: Colors.black,
-          size: 30,
+        child: SpeechToTextUltra(
+          ultraCallback: (String liveText, String finalText, bool isListening) {
+            _logger.i('Speech status - Live: $liveText, Final: $finalText, Listening: $isListening');
+            
+            setState(() {
+              // Update listening state
+              if (_isListening != isListening) {
+                _isListening = isListening;
+                
+                // If stopping listening and we have text, send it
+                if (!isListening && _currentResponse.isNotEmpty) {
+                  _logger.i('Recording completed with text: $_currentResponse');
+                  widget.onRecordingComplete(_currentResponse);
+                  _currentResponse = ''; // Reset for next recording
+                }
+              }
+              
+              // Update current response with live text
+              if (isListening && liveText.isNotEmpty) {
+                _currentResponse = liveText;
+              }
+            });
+          },
+          toStartIcon: Icon(
+            Icons.mic_none,
+            color: Colors.black,
+            size: 30,
+          ),
+          toPauseIcon: Icon(
+            Icons.mic,
+            color: Colors.black,
+            size: 30,
+          ),
         ),
+      ),
+    );
+  }
+
+  void _showError(String message) {
+    _logger.e('Voice input error: $message');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
       ),
     );
   }
