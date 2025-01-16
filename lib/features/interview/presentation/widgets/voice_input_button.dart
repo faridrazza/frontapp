@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:logger/logger.dart';
+import 'dart:async';
 
 class VoiceInputButton extends StatefulWidget {
   final Function(String) onRecordingComplete;
@@ -21,7 +22,9 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
   final Logger _logger = Logger();
   bool _isListening = false;
   String _currentText = '';
+  String _accumulatedText = '';
   double _confidenceLevel = 0.0;
+  Timer? _pauseTimer;
 
   @override
   void initState() {
@@ -32,7 +35,12 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
   void _initializeSpeech() async {
     try {
       bool available = await _speech.initialize(
-        onStatus: (status) => _logger.i('Speech recognition status: $status'),
+        onStatus: (status) {
+          _logger.i('Speech recognition status: $status');
+          if (status == 'notListening' && _isListening) {
+            _handlePause();
+          }
+        },
         onError: (errorNotification) => _logger.e('Speech recognition error: $errorNotification'),
       );
       _logger.i('Speech recognition available: $available');
@@ -41,42 +49,48 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
     }
   }
 
-  void _toggleListening() {
-    if (_isListening) {
-      _stopListening();
-    } else {
-      _startListening();
-    }
+  void _handlePause() {
+    _pauseTimer?.cancel();
+    
+    _pauseTimer = Timer(Duration(milliseconds: 500), () {
+      if (_isListening) {
+        _accumulatedText += ' ' + _currentText;
+        _startListening(restart: true);
+      }
+    });
   }
 
-  Future<void> _startListening() async {
+  Future<void> _startListening({bool restart = false}) async {
     try {
-      if (!_isListening) {
-        bool available = await _speech.initialize();
-        if (available) {
-          setState(() {
-            _isListening = true;
-            _currentText = '';
-          });
-          await _speech.listen(
-            onResult: (result) {
-              setState(() {
-                _currentText = result.recognizedWords;
-                _confidenceLevel = result.confidence;
-              });
-            },
-            listenFor: Duration(seconds: 120), // 2 minutes
-            pauseFor: Duration(seconds: 10), // 3 seconds pause allowed
-            partialResults: true,
-            cancelOnError: true,
-            listenMode: stt.ListenMode.dictation,
-          );
-          _logger.i('Started listening');
-        }
+      if (!restart) {
+        _accumulatedText = '';
+      }
+      
+      bool available = await _speech.initialize();
+      if (available) {
+        setState(() {
+          _isListening = true;
+          if (!restart) _currentText = '';
+        });
+
+        await _speech.listen(
+          onResult: (result) {
+            setState(() {
+              _currentText = result.recognizedWords;
+              _confidenceLevel = result.confidence;
+            });
+          },
+          listenFor: Duration(seconds: 120),
+          pauseFor: Duration(seconds: 3),
+          partialResults: true,
+          cancelOnError: false,
+          listenMode: stt.ListenMode.dictation,
+        );
+        _logger.i(restart ? 'Restarted listening' : 'Started listening');
       }
     } catch (e) {
-      _logger.e('Error starting speech recognition: $e');
-      _showError('Could not start voice recognition');
+      _logger.e('Error in speech recognition: $e');
+      if (!restart) _showError('Could not start voice recognition');
     }
   }
 
@@ -86,12 +100,16 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
       setState(() {
         _isListening = false;
       });
-      if (_currentText.isNotEmpty) {
-        widget.onRecordingComplete(_currentText);
+      
+      String finalText = (_accumulatedText + ' ' + _currentText).trim();
+      if (finalText.isNotEmpty) {
+        widget.onRecordingComplete(finalText);
       }
+      
       _currentText = '';
+      _accumulatedText = '';
       _confidenceLevel = 0.0;
-      _logger.i('Stopped listening');
+      _logger.i('Stopped listening. Final text: $finalText');
     } catch (e) {
       _logger.e('Error stopping speech recognition: $e');
       _showError('Could not stop voice recognition');
@@ -104,7 +122,7 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
       mainAxisSize: MainAxisSize.min,
       children: [
         GestureDetector(
-          onTap: widget.isProcessing ? null : _toggleListening, // Changed to tap instead of tap down/up
+          onTap: widget.isProcessing ? null : _toggleListening,
           child: Container(
             width: 60,
             height: 60,
@@ -157,6 +175,14 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
         backgroundColor: Colors.red,
       ),
     );
+  }
+
+  void _toggleListening() {
+    if (_isListening) {
+      _stopListening();
+    } else {
+      _startListening();
+    }
   }
 
   @override

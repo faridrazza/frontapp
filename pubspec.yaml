@@ -46,7 +46,7 @@ dependencies:
   web_socket_channel: ^3.0.1
   flutter_sound: ^9.6.0 
   permission_handler: ^10.0.0
-  speech_to_text: ^6.3.0
+  speech_to_text: ^7.0.0
   logger: ^2.4.0
   share_plus: ^7.0.0  # or the latest version available
   google_mobile_ads: ^5.1.0 # Make sure this is the latest version
