@@ -16,23 +16,17 @@ class VoiceInputButton extends StatefulWidget {
   _VoiceInputButtonState createState() => _VoiceInputButtonState();
 }
 
-class _VoiceInputButtonState extends State<VoiceInputButton>
-    with SingleTickerProviderStateMixin {
+class _VoiceInputButtonState extends State<VoiceInputButton> {
   final stt.SpeechToText _speech = stt.SpeechToText();
   final Logger _logger = Logger();
   bool _isListening = false;
+  String _currentText = '';
   double _confidenceLevel = 0.0;
-
-  // Animation controller for the pulse effect
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _opacityAnimation;
 
   @override
   void initState() {
     super.initState();
     _initializeSpeech();
-    _initializeAnimations();
   }
 
   void _initializeSpeech() async {
@@ -47,50 +41,35 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
     }
   }
 
-  void _initializeAnimations() {
-    _animationController = AnimationController(
-      duration: Duration(milliseconds: 1000),
-      vsync: this,
-    );
-
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeInOut,
-      ),
-    );
-
-    _opacityAnimation = Tween<double>(begin: 0.6, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeInOut,
-      ),
-    );
-
-    _animationController.repeat(reverse: true);
+  void _toggleListening() {
+    if (_isListening) {
+      _stopListening();
+    } else {
+      _startListening();
+    }
   }
 
-  void _startListening() async {
+  Future<void> _startListening() async {
     try {
       if (!_isListening) {
         bool available = await _speech.initialize();
         if (available) {
-          setState(() => _isListening = true);
-          _speech.listen(
+          setState(() {
+            _isListening = true;
+            _currentText = '';
+          });
+          await _speech.listen(
             onResult: (result) {
               setState(() {
+                _currentText = result.recognizedWords;
                 _confidenceLevel = result.confidence;
               });
-              if (result.finalResult) {
-                widget.onRecordingComplete(result.recognizedWords);
-                _stopListening();
-              }
             },
-            listenFor: Duration(seconds: 30),
-            pauseFor: Duration(seconds: 3),
+            listenFor: Duration(seconds: 120), // 2 minutes
+            pauseFor: Duration(seconds: 10), // 3 seconds pause allowed
             partialResults: true,
             cancelOnError: true,
-            listenMode: stt.ListenMode.confirmation,
+            listenMode: stt.ListenMode.dictation,
           );
           _logger.i('Started listening');
         }
@@ -101,13 +80,74 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
     }
   }
 
-  void _stopListening() {
-    _speech.stop();
-    setState(() {
-      _isListening = false;
+  Future<void> _stopListening() async {
+    try {
+      await _speech.stop();
+      setState(() {
+        _isListening = false;
+      });
+      if (_currentText.isNotEmpty) {
+        widget.onRecordingComplete(_currentText);
+      }
+      _currentText = '';
       _confidenceLevel = 0.0;
-    });
-    _logger.i('Stopped listening');
+      _logger.i('Stopped listening');
+    } catch (e) {
+      _logger.e('Error stopping speech recognition: $e');
+      _showError('Could not stop voice recognition');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: widget.isProcessing ? null : _toggleListening, // Changed to tap instead of tap down/up
+          child: Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _isListening ? Colors.red : Color(0xFFC6F432),
+              boxShadow: [
+                BoxShadow(
+                  color: (_isListening ? Colors.red : Color(0xFFC6F432))
+                      .withOpacity(0.3),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: widget.isProcessing
+                ? Padding(
+                    padding: EdgeInsets.all(16),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                    ),
+                  )
+                : Icon(
+                    _isListening ? Icons.mic : Icons.mic_none,
+                    color: Colors.black,
+                    size: 30,
+                  ),
+          ),
+        ),
+        if (_isListening)
+          Padding(
+            padding: EdgeInsets.only(top: 3),
+            child: Text(
+              'Tap to stop recording',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+              ),
+            ),
+          ),
+      ],
+    );
   }
 
   void _showError(String message) {
@@ -120,86 +160,7 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AnimatedBuilder(
-          animation: _animationController,
-          builder: (context, child) {
-            return Stack(
-              alignment: Alignment.center,
-              children: [
-                // Outer pulse effect
-                if (_isListening)
-                  Transform.scale(
-                    scale: _scaleAnimation.value,
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color(0xFFC8F235).withOpacity(_opacityAnimation.value),
-                      ),
-                    ),
-                  ),
-                // Main button
-                GestureDetector(
-                  onTapDown: (_) => _startListening(),
-                  onTapUp: (_) => _stopListening(),
-                  onTapCancel: () => _stopListening(),
-                  child: Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _isListening ? Colors.red : Color(0xFFC8F235),
-                      boxShadow: [
-                        BoxShadow(
-                          color: (_isListening ? Colors.red : Color(0xFFC8F235))
-                              .withOpacity(0.3),
-                          blurRadius: 10,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: widget.isProcessing
-                        ? Padding(
-                            padding: EdgeInsets.all(16),
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
-                            ),
-                          )
-                        : Icon(
-                            _isListening ? Icons.mic : Icons.mic_none,
-                            color: Colors.black,
-                            size: 30,
-                          ),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-        if (_isListening && _confidenceLevel > 0)
-          Padding(
-            padding: EdgeInsets.only(top: 8),
-            child: Text(
-              'Confidence: ${(_confidenceLevel * 100).toStringAsFixed(1)}%',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 12,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  @override
   void dispose() {
-    _animationController.dispose();
     _speech.stop();
     super.dispose();
   }
