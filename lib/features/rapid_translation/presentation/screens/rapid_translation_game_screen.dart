@@ -8,10 +8,9 @@ import 'package:frontapp/features/rapid_translation/presentation/widgets/chat_bu
 import 'package:frontapp/features/rapid_translation/presentation/widgets/timer_button.dart';
 import 'package:frontapp/features/rapid_translation/presentation/widgets/difficulty_button.dart';
 import 'package:frontapp/features/rapid_translation/domain/models/chat_message.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:logger/logger.dart';
 import 'dart:async'; // Add this import
+import 'package:frontapp/features/rapid_translation/presentation/widgets/voice_input_button.dart';
 
 class RapidTranslationGameScreen extends StatefulWidget {
   final String targetLanguage;
@@ -27,10 +26,7 @@ class RapidTranslationGameScreen extends StatefulWidget {
 
 class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen> with WidgetsBindingObserver {
   final ApiService _apiService = ApiService();
-  final stt.SpeechToText _speech = stt.SpeechToText();
   final Logger _logger = Logger();
-  bool _isListening = false;
-  String _text = '';
   String _selectedTimer = '';
   String _selectedDifficulty = '';
   String _gameSessionId = '';
@@ -49,17 +45,6 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initializeSpeechRecognition();
-  }
-
-  void _initializeSpeechRecognition() async {
-    bool available = await _speech.initialize(
-      onStatus: (status) => _logger.i('Speech recognition status: $status'),
-      onError: (errorNotification) => _logger.e('Speech recognition error: $errorNotification'),
-    );
-    if (!available) {
-      _logger.e('Speech recognition not available');
-    }
   }
 
   @override
@@ -394,47 +379,24 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         color: Color(0xFF121212),
-        // boxShadow: [
-        //   BoxShadow(
-        //     color: Colors.black26,
-        //     blurRadius: 10,
-        //     offset: Offset(0, -2),
-        //   ),
-        // ],
       ),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: _isListening ? _stopListening : _startListening,
-            child: AnimatedContainer(
-              duration: Duration(milliseconds: 300),
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _isListening 
-                    ? Color(0xFFC6F432)
-                    : Color(0xFFC6F432).withOpacity(0.1),
-                border: Border.all(
-                  color: Color(0xFFC6F432).withOpacity(_isListening ? 1 : 0.3),
-                  width: 2,
-                ),
-                boxShadow: _isListening
-                    ? [
-                        BoxShadow(
-                          color: Color(0xFFC6F432).withOpacity(0.3),
-                          blurRadius: 12,
-                          spreadRadius: 2,
-                        )
-                      ]
-                    : [],
-              ),
-              child: Icon(
-                _isListening ? Icons.stop : Icons.mic,
-                color: _isListening ? Colors.black : Color(0xFFC6F432),
-                size: 30,
-              ),
-            ),
+          VoiceInputButton(
+            isProcessing: _isLoading,
+            onRecordingComplete: (String text) {
+              if (text.isNotEmpty) {
+                setState(() {
+                  _chatMessages.add(ChatMessage(
+                    text: text,
+                    isSystem: false,
+                    isError: false,
+                  ));
+                });
+                _submitTranslation(text);
+                _scrollToBottom();
+              }
+            },
           ),
           SizedBox(width: 12),
           Expanded(
@@ -697,46 +659,6 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
     }
   }
 
-  void _startListening() async {
-    _logger.i('Starting speech recognition');
-    if (!_isListening) {
-      if (await _speech.initialize()) {
-        setState(() => _isListening = true);
-        _speech.listen(
-          onResult: _onSpeechResult,
-          listenFor: Duration(seconds: 30),
-          pauseFor: Duration(seconds: 5),
-          partialResults: true,
-          localeId: widget.targetLanguage,
-          cancelOnError: true,
-          listenMode: stt.ListenMode.confirmation,
-        );
-      }
-    }
-  }
-
-  void _stopListening() async {
-    _logger.i('Stopping speech recognition');
-    await _speech.stop();
-    setState(() => _isListening = false);
-    
-    if (_text.isNotEmpty) {
-      _logger.i('Submitting recognized text: $_text');
-      _submitTranslation(_text);
-      setState(() {
-        _chatMessages.add(ChatMessage(
-          text: _text,
-          isSystem: false,
-          isError: false,
-        ));
-      });
-      _scrollToBottom();
-      _text = ''; // Clear the text after submitting
-    } else {
-      _logger.w('No text recognized');
-    }
-  }
-
   void _showTextInput() {
     showModalBottomSheet(
       context: context,
@@ -860,13 +782,6 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   int _calculateTimeTaken() {
     // This is a placeholder implementation. Replace with your actual logic.
     return 0; // Return the time taken in seconds or milliseconds
-  }
-
-  void _onSpeechResult(SpeechRecognitionResult result) {
-    setState(() {
-      _text = result.recognizedWords;
-      _logger.i('Recognized words: $_text');
-    });
   }
 
   void _showNewSentenceIndicator() {
