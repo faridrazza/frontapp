@@ -451,26 +451,41 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
     return Container(
       height: 60,
       decoration: BoxDecoration(
-        color: Color(0xFFC6F432).withOpacity(0.1),
+        color: Color(0xFF1A1A1A),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: Color(0xFFC6F432).withOpacity(0.3),
+          width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFFC6F432).withOpacity(0.1),
+            blurRadius: 8,
+            spreadRadius: -2,
+          ),
+        ],
       ),
       child: TextField(
         controller: _roleController,
-        style: GoogleFonts.poppins(color: Colors.white),
+        style: GoogleFonts.poppins(
+          color: Colors.white,
+          fontSize: 16,
+        ),
         decoration: InputDecoration(
           hintText: 'e.g., Flutter Developer',
           hintStyle: GoogleFonts.poppins(
             color: Colors.white.withOpacity(0.5),
+            fontSize: 16,
           ),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 20),
           prefixIcon: Icon(
             Icons.work_outline,
             color: Color(0xFFC6F432),
+            size: 20,
           ),
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 20),
         ),
       ),
     );
