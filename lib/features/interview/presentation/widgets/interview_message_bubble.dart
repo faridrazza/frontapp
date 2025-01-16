@@ -109,7 +109,7 @@ class InterviewMessageBubble extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
       ),
-      child: Icon(Icons.smart_toy, color: Colors.black, size: 20),
+      child: Icon(Icons.woman, color: Colors.black, size: 20),
     );
   }
 
