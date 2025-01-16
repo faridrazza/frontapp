@@ -456,9 +456,10 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   }
 
   void _startGame() async {
+    if (!_canStartGame() || _isLoading) return;
     try {
       setState(() {
-        _isLoading = true; // Set loading to true when starting the game
+        _isLoading = true;
       });
       final result = await _apiService.startTranslationGame(_selectedDifficulty, _selectedTimer);
       setState(() {
@@ -525,9 +526,9 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
   void _startTimer() {
     if (_selectedTimer != 'No Timer' && !_isPaused) {
       _timer?.cancel();
-      _remainingTime = int.parse(_selectedTimer);
       setState(() {
-        _shouldStopVoiceInput = false; // Reset when starting timer
+        _remainingTime = int.parse(_selectedTimer);
+        _shouldStopVoiceInput = false;
       });
       
       _timer = Timer.periodic(Duration(seconds: 1), (timer) {
@@ -550,11 +551,10 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
 
   void _handleTimeUp() async {
     if (!mounted) return;
-    
     setState(() {
-      _shouldStopVoiceInput = true; // Ensure microphone stops
+      _shouldStopVoiceInput = true;
+      _isLoading = true;
     });
-
     try {
       final Map<String, dynamic> response = await _apiService.timeUp(_gameSessionId);
       _logger.i('Time up response: $response');
@@ -602,17 +602,18 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
           });
         });
       }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   void _submitTranslation(String translation) async {
-    if (_isPaused) return;
-    _timer?.cancel(); // Cancel the timer when a translation is submitted
-    _logger.i('Submitting translation: $translation');
-    setState(() {
-      _isLoading = true;
-    });
-
+    if (_isPaused || !mounted) return;
+    _timer?.cancel();
     try {
       final int timeTaken = _calculateTimeTaken(); // Implement this method
       final response = await _apiService.submitTranslation(
@@ -658,15 +659,16 @@ class _RapidTranslationGameScreenState extends State<RapidTranslationGameScreen>
       _getNextSentence();
     } catch (e) {
       _logger.e('Error submitting translation: $e');
-      setState(() {
-        _chatMessages.add(ChatMessage(
-          text: 'Error submitting translation. Please try again.',
-          isSystem: false,
-          isError: true,
-        ));
-        _isLoading = false;
-      });
-      _scrollToBottom();
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _chatMessages.add(ChatMessage(
+            text: 'Error submitting translation. Please try again.',
+            isSystem: true,
+            isError: true,
+          ));
+        });
+      }
     }
   }
 

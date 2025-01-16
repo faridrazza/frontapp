@@ -31,10 +31,18 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
   @override
   void dispose() {
     _pauseTimer?.cancel();
+    _currentResponse = '';
+    _accumulatedText = '';
+    _hasSubmitted = false;
     super.dispose();
   }
 
   void _handleSpeechUpdate(String liveText, String finalText, bool isListening) {
+    if (!mounted) return;
+    if (widget.shouldStopRecording && isListening) {
+      _handleRecordingStop();
+      return;
+    }
     _logger.i('Speech status - Live: $liveText, Final: $finalText, Listening: $isListening');
     
     // Don't update state if we should stop recording
