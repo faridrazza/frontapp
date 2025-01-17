@@ -616,9 +616,24 @@ class ApiService {
         _logger.e('❌ Sign in failed with status code: ${response.statusCode}');
         throw Exception('Failed to sign in');
       }
-    } catch (e) {
+    } on DioException catch (e) {
       _logger.e('❌ Error during sign in', error: e);
-      throw Exception('Error during sign in: $e');
+      
+      // Handle 401 status code specifically
+      if (e.response?.statusCode == 401) {
+        final errorMessage = e.response?.data['message'] ?? 'Invalid email or password';
+        throw Exception(errorMessage);
+      }
+      
+      // Handle other DioExceptions
+      String errorMessage = 'Error during sign in';
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        errorMessage = e.response?.data['message'];
+      }
+      throw Exception(errorMessage);
+    } catch (e) {
+      _logger.e('❌ Unexpected error during sign in', error: e);
+      throw Exception('An unexpected error occurred. Please try again.');
     }
   }
 

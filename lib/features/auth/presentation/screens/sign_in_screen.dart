@@ -70,7 +70,7 @@ class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderSt
       );
     } catch (e) {
       setState(() {
-        _errorMessage = e.toString();
+        _errorMessage = e.toString().replaceAll('Exception: ', '');
       });
     } finally {
       setState(() {
