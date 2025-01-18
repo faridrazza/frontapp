@@ -5,17 +5,19 @@ import 'dart:async';
 
 class VoiceInputButton extends StatefulWidget {
   final Function(String) onRecordingComplete;
+  final bool isProcessing;
 
   const VoiceInputButton({
-    Key? key,
     required this.onRecordingComplete,
+    this.isProcessing = false,
+    Key? key,
   }) : super(key: key);
 
   @override
   _VoiceInputButtonState createState() => _VoiceInputButtonState();
 }
 
-class _VoiceInputButtonState extends State<VoiceInputButton> {
+class _VoiceInputButtonState extends State<VoiceInputButton> with WidgetsBindingObserver {
   final Logger _logger = Logger();
   bool _isListening = false;
   String _currentResponse = '';
@@ -25,12 +27,19 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
   static const int _pauseThreshold = 1800; // 1.8 seconds pause threshold
 
   @override
-  void dispose() {
-    _pauseTimer?.cancel();
-    _currentResponse = '';
-    _accumulatedText = '';
-    _hasSubmitted = false;
-    super.dispose();
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Handle app lifecycle changes
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      if (_isListening) {
+        _handleRecordingStop();
+      }
+    }
   }
 
   void _handleSpeechUpdate(String liveText, String finalText, bool isListening) {
@@ -68,7 +77,6 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
               if (_accumulatedText.isEmpty) {
                 _accumulatedText = _currentResponse;
               } else if (!_accumulatedText.endsWith(_currentResponse)) {
-                // Only append if it's not already there
                 _accumulatedText = '$_accumulatedText $_currentResponse'.trim();
               }
               _logger.i('Pause detected, accumulated text: $_accumulatedText');
@@ -86,7 +94,6 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
       _hasSubmitted = true;
       String finalText = '';
       
-      // Combine accumulated and current text
       if (_accumulatedText.isNotEmpty) {
         finalText = _currentResponse.isNotEmpty 
             ? '$_accumulatedText $_currentResponse'.trim()
@@ -100,41 +107,77 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
         widget.onRecordingComplete(finalText);
       }
       
-      // Reset state
-      _currentResponse = '';
-      _accumulatedText = '';
+      setState(() {
+        _currentResponse = '';
+        _accumulatedText = '';
+        _isListening = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: _isListening ? Colors.red.withOpacity(0.3) : Color(0xFFC6F432).withOpacity(0.3),
-        boxShadow: [
-          BoxShadow(
-            color: _isListening ? Colors.red.withOpacity(0.2) : Color(0xFFC6F432).withOpacity(0.2),
-            blurRadius: 10,
-            spreadRadius: 2,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: _isListening ? Colors.red.withOpacity(0.3) : Color(0xFFC6F432).withOpacity(0.3),
+            boxShadow: [
+              BoxShadow(
+                color: _isListening ? Colors.red.withOpacity(0.2) : Color(0xFFC6F432).withOpacity(0.2),
+                blurRadius: 10,
+                spreadRadius: 2,
+              ),
+            ],
           ),
-        ],
-      ),
-      child: SpeechToTextUltra(
-        ultraCallback: _handleSpeechUpdate,
-        toStartIcon: Icon(
-          Icons.mic_none,
-          color: Colors.white,
-          size: 30,
+          child: widget.isProcessing
+              ? Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                )
+              : SpeechToTextUltra(
+                  ultraCallback: _handleSpeechUpdate,
+                  toStartIcon: Icon(
+                    Icons.mic_none,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                  toPauseIcon: Icon(
+                    Icons.mic,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                ),
         ),
-        toPauseIcon: Icon(
-          Icons.mic,
-          color: Colors.white,
-          size: 30,
-        ),
-      ),
+        if (_isListening && !widget.isProcessing)
+          Padding(
+            padding: EdgeInsets.only(top: 3),
+            child: Text(
+              'Tap to stop recording',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+              ),
+            ),
+          ),
+      ],
     );
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _pauseTimer?.cancel();
+    super.dispose();
   }
 }

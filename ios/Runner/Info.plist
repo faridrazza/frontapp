@@ -48,7 +48,7 @@
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-9842922624465296~3555375931</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>This app needs access to the microphone for speech recognition features.</string>
+	<string>In order to perform voice-based tasks, this app requires permission to access the microphone.</string>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>This identifier will be used to deliver personalized ads to you.</string>
 	<key>SKAdNetworkItems</key>
@@ -75,5 +75,7 @@
 	<array>
 		<string>applinks:speakjar.com</string>
 	</array>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>In order to perform voice-based tasks, this app requires permission to recognize recorded audio.</string>
 </dict>
 </plist>
