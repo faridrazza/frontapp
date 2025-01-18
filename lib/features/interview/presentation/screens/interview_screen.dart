@@ -261,10 +261,15 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
     
     _videoController.removeListener(_monitorVideoPlayback);
     
-    setState(() => _isAudioPlaying = false);
+    setState(() {
+      _isAudioPlaying = false;
+      _currentMessage = null;
+    });
     
     await AudioUtils.stopAudio();
-    await _videoController.pause();
+    if (_videoController.value.isPlaying) {
+      await _videoController.pause();
+    }
     await _videoController.seekTo(Duration.zero);
   }
 
@@ -293,6 +298,7 @@ class _InterviewScreenState extends State<InterviewScreen> with SingleTickerProv
         child: BlocConsumer<InterviewBloc, InterviewState>(
           listener: (context, state) {
             if (state is InterviewCompleted) {
+              _stopPlayback();
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => InterviewFeedbackScreen(feedback: state.feedback),
