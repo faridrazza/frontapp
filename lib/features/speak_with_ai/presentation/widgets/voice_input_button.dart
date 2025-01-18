@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:speech_to_text_ultra/speech_to_text_ultra.dart';
-import '../../../../core/utils/audio_utils.dart';
 import 'package:logger/logger.dart';
 import 'dart:async';
 
@@ -21,47 +20,17 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
   bool _isListening = false;
   String _currentResponse = '';
   String _accumulatedText = '';
+  bool _hasSubmitted = false;
   Timer? _pauseTimer;
-  static const int _pauseThreshold = 2000; // 2 seconds pause threshold
+  static const int _pauseThreshold = 1800; // 1.8 seconds pause threshold
 
   @override
   void dispose() {
     _pauseTimer?.cancel();
     _currentResponse = '';
     _accumulatedText = '';
+    _hasSubmitted = false;
     super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: _isListening ? Colors.red : Color(0xFFC6F432),
-        boxShadow: [
-          BoxShadow(
-            color: (_isListening ? Colors.red : Color(0xFFC6F432)).withOpacity(0.3),
-            blurRadius: 10,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      child: SpeechToTextUltra(
-        ultraCallback: _handleSpeechUpdate,
-        toStartIcon: Icon(
-          Icons.mic_none,
-          color: Colors.black,
-          size: 30,
-        ),
-        toPauseIcon: Icon(
-          Icons.mic,
-          color: Colors.black,
-          size: 30,
-        ),
-      ),
-    );
   }
 
   void _handleSpeechUpdate(String liveText, String finalText, bool isListening) {
@@ -76,6 +45,12 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
         
         if (!isListening) {
           _handleRecordingStop();
+        } else {
+          // Reset state when starting new recording
+          _hasSubmitted = false;
+          if (_accumulatedText.isEmpty) {
+            _currentResponse = '';
+          }
         }
       }
       
@@ -83,27 +58,21 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
       if (isListening && liveText.isNotEmpty) {
         _pauseTimer?.cancel();
         
-        // If there's accumulated text and new text is different
-        if (_accumulatedText.isNotEmpty && liveText != _currentResponse) {
-          _currentResponse = liveText;
-          // Only append if it's new content
-          if (!_accumulatedText.endsWith(_currentResponse)) {
-            _accumulatedText = '$_accumulatedText $_currentResponse'.trim();
-          }
-        } else {
-          _currentResponse = liveText;
-        }
+        // Update current response
+        _currentResponse = liveText;
         
         // Start pause timer
         _pauseTimer = Timer(Duration(milliseconds: _pauseThreshold), () {
-          if (_currentResponse.isNotEmpty) {
+          if (_currentResponse.isNotEmpty && mounted) {
             setState(() {
               if (_accumulatedText.isEmpty) {
                 _accumulatedText = _currentResponse;
               } else if (!_accumulatedText.endsWith(_currentResponse)) {
+                // Only append if it's not already there
                 _accumulatedText = '$_accumulatedText $_currentResponse'.trim();
               }
               _logger.i('Pause detected, accumulated text: $_accumulatedText');
+              _currentResponse = '';
             });
           }
         });
@@ -113,33 +82,58 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
 
   void _handleRecordingStop() {
     _pauseTimer?.cancel();
-    String finalText = '';
-    
-    // Combine accumulated and current text
-    if (_accumulatedText.isNotEmpty) {
-      finalText = _currentResponse.isNotEmpty 
-          ? '$_accumulatedText $_currentResponse'.trim()
-          : _accumulatedText;
-    } else {
-      finalText = _currentResponse;
+    if (!_hasSubmitted) {
+      _hasSubmitted = true;
+      String finalText = '';
+      
+      // Combine accumulated and current text
+      if (_accumulatedText.isNotEmpty) {
+        finalText = _currentResponse.isNotEmpty 
+            ? '$_accumulatedText $_currentResponse'.trim()
+            : _accumulatedText.trim();
+      } else {
+        finalText = _currentResponse.trim();
+      }
+      
+      if (finalText.isNotEmpty) {
+        _logger.i('Recording completed with text: $finalText');
+        widget.onRecordingComplete(finalText);
+      }
+      
+      // Reset state
+      _currentResponse = '';
+      _accumulatedText = '';
     }
-    
-    if (finalText.isNotEmpty) {
-      _logger.i('Recording completed with text: $finalText');
-      widget.onRecordingComplete(finalText.trim());
-    }
-    
-    // Reset state
-    _currentResponse = '';
-    _accumulatedText = '';
   }
 
-  void _showError(String message) {
-    _logger.e('Voice input error: $message');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: _isListening ? Colors.red.withOpacity(0.3) : Color(0xFFC6F432).withOpacity(0.3),
+        boxShadow: [
+          BoxShadow(
+            color: _isListening ? Colors.red.withOpacity(0.2) : Color(0xFFC6F432).withOpacity(0.2),
+            blurRadius: 10,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: SpeechToTextUltra(
+        ultraCallback: _handleSpeechUpdate,
+        toStartIcon: Icon(
+          Icons.mic_none,
+          color: Colors.white,
+          size: 30,
+        ),
+        toPauseIcon: Icon(
+          Icons.mic,
+          color: Colors.white,
+          size: 30,
+        ),
       ),
     );
   }
