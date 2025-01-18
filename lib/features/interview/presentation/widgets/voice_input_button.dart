@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:speech_to_text_ultra/speech_to_text_ultra.dart';
 import 'package:logger/logger.dart';
+import 'dart:async';
 
 class VoiceInputButton extends StatefulWidget {
   final Function(String) onRecordingComplete;
   final bool isProcessing;
 
   const VoiceInputButton({
-    Key? key,
     required this.onRecordingComplete,
     this.isProcessing = false,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -19,8 +20,47 @@ class VoiceInputButton extends StatefulWidget {
 class _VoiceInputButtonState extends State<VoiceInputButton> {
   final Logger _logger = Logger();
   bool _isListening = false;
-  String _entireResponse = '';
-  String _liveResponse = '';
+  String _currentResponse = '';
+  String _accumulatedText = '';
+
+  void _handleSpeechUpdate(String liveText, String finalText, bool isListening) {
+    if (!mounted) return;
+    
+    _logger.i('Speech status - Live: $liveText, Final: $finalText, Listening: $isListening');
+    
+    setState(() {
+      // Update listening state
+      if (_isListening != isListening) {
+        _isListening = isListening;
+        
+        if (!isListening) {
+          _handleRecordingStop(finalText);
+        } else {
+          // Reset state when starting new recording
+          _currentResponse = '';
+          _accumulatedText = '';
+        }
+      }
+      
+      // Handle live text updates during active listening
+      if (isListening && liveText.isNotEmpty) {
+        _currentResponse = liveText;
+      }
+    });
+  }
+
+  void _handleRecordingStop(String finalText) {
+    if (finalText.isEmpty) return;
+    
+    _logger.i('Recording completed with text: $finalText');
+    widget.onRecordingComplete(finalText);
+    
+    setState(() {
+      _currentResponse = '';
+      _accumulatedText = '';
+      _isListening = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,43 +72,41 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
           height: 60,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: _isListening ? Colors.red : Color(0xFFC6F432),
+            color: _isListening ? Colors.red.withOpacity(0.3) : Color(0xFFC6F432).withOpacity(0.3),
             boxShadow: [
               BoxShadow(
-                color: (_isListening ? Colors.red : Color(0xFFC6F432)).withOpacity(0.3),
+                color: _isListening ? Colors.red.withOpacity(0.2) : Color(0xFFC6F432).withOpacity(0.2),
                 blurRadius: 10,
                 spreadRadius: 2,
               ),
             ],
           ),
-          child: SpeechToTextUltra(
-            ultraCallback: (String liveText, String finalText, bool isListening) {
-              setState(() {
-                _liveResponse = liveText;
-                _entireResponse = finalText;
-                _isListening = isListening;
-                
-                // When speech ends, send the complete response
-                if (!isListening && finalText.isNotEmpty) {
-                  widget.onRecordingComplete(finalText);
-                  _entireResponse = '';
-                  _liveResponse = '';
-                }
-              });
-            },
-            toStartIcon: Icon(
-              Icons.mic_none,
-              color: Colors.black,
-              size: 30,
-            ),
-            toPauseIcon: Icon(
-              Icons.mic,
-              color: Colors.black,
-              size: 30,
-            ),
-          ),
+          child: widget.isProcessing
+              ? Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                )
+              : SpeechToTextUltra(
+                  ultraCallback: _handleSpeechUpdate,
+                  toStartIcon: Icon(
+                    Icons.mic_none,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                  toPauseIcon: Icon(
+                    Icons.mic,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                ),
         ),
-        if (_isListening)
+        if (_isListening && !widget.isProcessing)
           Padding(
             padding: EdgeInsets.only(top: 3),
             child: Text(
@@ -80,15 +118,6 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
             ),
           ),
       ],
-    );
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
     );
   }
 }
