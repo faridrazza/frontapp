@@ -25,6 +25,8 @@ import 'package:frontapp/features/interview/presentation/bloc/interview_bloc.dar
 import 'package:frontapp/features/interview/domain/repositories/interview_repository.dart';
 import 'package:logger/logger.dart';
 import 'package:frontapp/features/auth/presentation/screens/sign_in_screen.dart';
+import 'package:frontapp/features/script_chat/presentation/screens/video_display_screen.dart';
+import 'package:frontapp/features/script_chat/presentation/bloc/script_chat_bloc.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isNewUser;
@@ -180,6 +182,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           _buildFeatureButton('Speak with AI', Color(0xFFC6F432), Icons.record_voice_over, true),
                           _buildFeatureButton('Interview AI', Color(0xFF7B61FF), Icons.business, false),
                           _buildFeatureButton('Learn with AI', Color(0xFFC09FF8), Icons.school, false),
+                          _buildFeatureButton('Script Chat', Color(0xFF4CAF50), Icons.movie, false),
                           _buildFeatureButton('Role play ideas', Color(0xFFFFB341), Icons.lightbulb, false),
                           _buildFeatureButton('Rapid Sentence', Color(0xFFFEC4DD), Icons.qr_code, false),
                         ],
@@ -370,7 +373,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _handleFeatureTap(String label) async {
-    if (label == 'Speak with AI') {
+    if (label == 'Script Chat') {
+      await _adService.showInterstitialAd();
+      final scriptChatBloc = ScriptChatBloc(_apiService);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MultiBlocProvider(
+            providers: [
+              BlocProvider<ScriptChatBloc>(
+                create: (context) => scriptChatBloc..add(FetchVideos()),
+              ),
+            ],
+            child: const VideoDisplayScreen(),
+          ),
+        ),
+      );
+    } else if (label == 'Speak with AI') {
       await _adService.showInterstitialAd();
       Navigator.push(
         context,

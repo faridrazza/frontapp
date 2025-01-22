@@ -63,6 +63,8 @@ dependencies:
   just_audio: ^0.9.35
   path_provider: ^2.1.1
   speech_to_text_ultra: ^0.0.3
+  youtube_player_flutter: ^9.1.1
+  # flutter_inappwebview: ^5.8.0
 
 dev_dependencies:
   flutter_test:

@@ -6,6 +6,7 @@ import 'package:logger/logger.dart';
 import 'package:frontapp/core/config/app_config.dart';
 import 'package:frontapp/core/utils/feedback_parser.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:frontapp/features/script_chat/domain/models/video.dart';
 
 class ApiService {
   final Dio _dio = Dio();
@@ -709,6 +710,93 @@ class ApiService {
     } catch (e) {
       _logger.e('❌ Error resetting password', error: e);
       throw Exception('Error resetting password: $e');
+    }
+  }
+
+  Future<List<Video>> fetchVideos() async {
+    _logger.i('📹 Fetching videos');
+    
+    try {
+      final token = await _storage.read(key: 'auth_token');
+      final response = await _dio.get(
+        '$_baseUrl/api/app/videos/fetch-all',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> videosJson = response.data['data']['videos'];
+        return videosJson.map((json) => Video.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to fetch videos');
+      }
+    } catch (e) {
+      _logger.e('Error fetching videos: $e');
+      throw Exception('Error fetching videos: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> startScriptChat(String videoId) async {
+    _logger.i('🎬 Starting script chat session');
+    
+    try {
+      final token = await _storage.read(key: 'auth_token');
+      final response = await _dio.post(
+        '$_baseUrl/api/script-chat/start',
+        data: {'videoId': videoId},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Failed to start script chat');
+      }
+    } catch (e) {
+      _logger.e('Error starting script chat: $e');
+      throw Exception('Error starting script chat: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> sendScriptChatMessage(String sessionId, String message) async {
+    _logger.i('💬 Sending script chat message');
+    try {
+      final token = await _storage.read(key: 'auth_token');
+      final response = await _dio.post(
+        '$_baseUrl/api/script-chat/message',
+        data: {
+          'sessionId': sessionId,
+          'message': message,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Failed to send message');
+      }
+    } catch (e) {
+      _logger.e('Error sending message: $e');
+      throw Exception('Error sending message: $e');
+    }
+  }
+
+  Future<void> endScriptChat(String sessionId) async {
+    _logger.i('🏁 Ending script chat session');
+    try {
+      final token = await _storage.read(key: 'auth_token');
+      final response = await _dio.post(
+        '$_baseUrl/api/script-chat/end',
+        data: {'sessionId': sessionId},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to end chat session');
+      }
+    } catch (e) {
+      _logger.e('Error ending chat session: $e');
+      throw Exception('Error ending chat session: $e');
     }
   }
 }
