@@ -212,7 +212,7 @@ class _ScriptChatScreenState extends State<ScriptChatScreen> with WidgetsBinding
             ),
             // Bottom Controls Container
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               color: Colors.black,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -251,11 +251,13 @@ class _ScriptChatScreenState extends State<ScriptChatScreen> with WidgetsBinding
                       ),
                     ),
                   ),
-                  // Mic Button
+                  // Mic Button with updated colors
                   Container(
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFC6F432), Color(0xFF90E0EF)],
+                      gradient: LinearGradient(
+                        colors: _isListening 
+                            ? [Colors.red, Colors.redAccent]
+                            : [const Color(0xFFC6F432), const Color(0xFF90E0EF)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
