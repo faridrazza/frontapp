@@ -6,6 +6,8 @@ import '../bloc/script_chat_bloc.dart';
 import '../widgets/chat_message_bubble.dart';
 import '../../../../core/utils/audio_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:frontapp/features/auth/presentation/screens/home_screen.dart';
+
 
 class ScriptChatScreen extends StatefulWidget {
   final String videoId;
@@ -21,16 +23,23 @@ class ScriptChatScreen extends StatefulWidget {
   _ScriptChatScreenState createState() => _ScriptChatScreenState();
 }
 
-class _ScriptChatScreenState extends State<ScriptChatScreen> {
+class _ScriptChatScreenState extends State<ScriptChatScreen> with WidgetsBindingObserver {
   late YoutubePlayerController _videoController;
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _isListening = false;
   String? _sessionId;
   final List<Map<String, dynamic>> _messages = [];
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
+    _initializeVideo();
+    _initializeSpeech();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  void _initializeVideo() {
     final videoId = YoutubePlayer.convertUrlToId(widget.videoUrl);
     _videoController = YoutubePlayerController(
       initialVideoId: videoId ?? '',
@@ -39,7 +48,6 @@ class _ScriptChatScreenState extends State<ScriptChatScreen> {
         mute: false,
       ),
     );
-    _initializeSpeech();
   }
 
   Future<void> _initializeSpeech() async {
@@ -77,6 +85,33 @@ class _ScriptChatScreenState extends State<ScriptChatScreen> {
     }
   }
 
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _videoController.dispose();
+    AudioUtils.stopAudio(); // Stop any playing audio
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      AudioUtils.stopAudio(); // Stop audio when app goes to background
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -84,7 +119,7 @@ class _ScriptChatScreenState extends State<ScriptChatScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Video Section with proper spacing
+            // Video Section
             Container(
               height: MediaQuery.of(context).size.height * 0.3,
               padding: const EdgeInsets.only(top: 8),
@@ -105,69 +140,69 @@ class _ScriptChatScreenState extends State<ScriptChatScreen> {
                       'message': state.message,
                     });
                     AudioUtils.playAudio(state.audio);
+                    _scrollToBottom();
                   } else if (state is MessageSent) {
                     _messages.add({
                       'isUser': false,
                       'message': state.message,
                     });
                     AudioUtils.playAudio(state.audio);
+                    _scrollToBottom();
                   } else if (state is ChatEnded) {
-                    Navigator.pop(context);
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (context) => const HomeScreen(isNewUser: false),
+                      ),
+                      (route) => false,
+                    );
                   }
                 },
                 builder: (context, state) {
                   return ListView.builder(
+                    controller: _scrollController,
                     itemCount: _messages.length,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     itemBuilder: (context, index) {
                       final message = _messages[index];
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Row(
-                          mainAxisAlignment: message['isUser'] 
-                              ? MainAxisAlignment.end 
-                              : MainAxisAlignment.start,
-                          children: [
-                            if (!message['isUser']) _buildAvatarIcon(),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: message['isUser']
-                                        ? [const Color(0xFF7B61FF).withOpacity(0.1), const Color(0xFFFEC4DD).withOpacity(0.1)]
-                                        : [const Color(0xFFC6F432).withOpacity(0.1), const Color(0xFF90E0EF).withOpacity(0.1)],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: message['isUser']
-                                        ? const Color(0xFF7B61FF).withOpacity(0.2)
-                                        : const Color(0xFFC6F432).withOpacity(0.2),
-                                    width: 1,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: (message['isUser'] ? const Color(0xFF7B61FF) : const Color(0xFFC6F432)).withOpacity(0.1),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
+                        child: Container(
+                          alignment: message['isUser'] 
+                              ? Alignment.centerRight 
+                              : Alignment.centerLeft,
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: message['isUser']
+                                    ? [const Color(0xFF7B61FF).withOpacity(0.1), const Color(0xFFFEC4DD).withOpacity(0.1)]
+                                    : [const Color(0xFFC6F432).withOpacity(0.1), const Color(0xFF90E0EF).withOpacity(0.1)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: message['isUser']
+                                    ? const Color(0xFF7B61FF).withOpacity(0.2)
+                                    : const Color(0xFFC6F432).withOpacity(0.2),
+                                width: 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: (message['isUser'] ? const Color(0xFF7B61FF) : const Color(0xFFC6F432)).withOpacity(0.1),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
                                 ),
-                                child: Text(
-                                  message['message'],
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                  ),
-                                ),
+                              ],
+                            ),
+                            child: Text(
+                              message['message'],
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 14,
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            if (message['isUser']) _buildUserIcon(),
-                          ],
+                          ),
                         ),
                       );
                     },
@@ -177,40 +212,34 @@ class _ScriptChatScreenState extends State<ScriptChatScreen> {
             ),
             // Bottom Controls Container
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.8),
-                border: Border(
-                  top: BorderSide(
-                    color: const Color(0xFFC6F432).withOpacity(0.2),
-                    width: 1,
-                  ),
-                ),
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              color: Colors.black,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   // End Button
                   Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
                         colors: [Color(0xFFC6F432), Color(0xFF90E0EF)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.all(Radius.circular(24)),
+                      borderRadius: BorderRadius.circular(30),
                     ),
-                    child: TextButton(
+                    child: ElevatedButton(
                       onPressed: () {
                         if (_sessionId != null) {
                           context.read<ScriptChatBloc>().add(EndChat(_sessionId!));
                         }
                       },
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(30),
                         ),
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       ),
                       child: Text(
                         'End',
@@ -223,12 +252,27 @@ class _ScriptChatScreenState extends State<ScriptChatScreen> {
                     ),
                   ),
                   // Mic Button
-                  FloatingActionButton(
-                    onPressed: _isListening ? _stopListening : _startListening,
-                    backgroundColor: _isListening ? Colors.red : const Color(0xFFC6F432),
-                    child: Icon(
-                      _isListening ? Icons.mic_off : Icons.mic,
-                      color: Colors.black,
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFC6F432), Color(0xFF90E0EF)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: ElevatedButton(
+                      onPressed: _isListening ? _stopListening : _startListening,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: const CircleBorder(),
+                        padding: const EdgeInsets.all(16),
+                      ),
+                      child: Icon(
+                        _isListening ? Icons.mic_off : Icons.mic,
+                        color: Colors.black,
+                      ),
                     ),
                   ),
                 ],
@@ -270,11 +314,5 @@ class _ScriptChatScreenState extends State<ScriptChatScreen> {
       ),
       child: const Icon(Icons.person, color: Colors.black, size: 20),
     );
-  }
-
-  @override
-  void dispose() {
-    _videoController.dispose();
-    super.dispose();
   }
 } 
