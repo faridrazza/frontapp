@@ -6,6 +6,7 @@ import '../../domain/models/video.dart';
 import './script_chat_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:frontapp/features/auth/presentation/screens/home_screen.dart';
 
 class VideoDisplayScreen extends StatefulWidget {
   const VideoDisplayScreen({Key? key}) : super(key: key);
@@ -15,6 +16,8 @@ class VideoDisplayScreen extends StatefulWidget {
 }
 
 class _VideoDisplayScreenState extends State<VideoDisplayScreen> {
+  final List<YoutubePlayerController> _controllers = [];
+
   @override
   void initState() {
     super.initState();
@@ -25,20 +28,145 @@ class _VideoDisplayScreenState extends State<VideoDisplayScreen> {
     return YoutubePlayer.convertUrlToId(url);
   }
 
-  Widget _buildVideoCard(Video video) {
-    final videoId = _extractVideoId(video.videoLink);
-    final YoutubePlayerController controller = YoutubePlayerController(
-      initialVideoId: videoId ?? '',
-      flags: const YoutubePlayerFlags(
-        autoPlay: false,
-        mute: false,
-        hideControls: false,
-        enableCaption: true,
-        forceHD: true,
-        useHybridComposition: true,
+  @override
+  void dispose() {
+    _cleanupControllers();
+    super.dispose();
+  }
+
+  Future<void> _cleanupControllers() async {
+    for (var controller in _controllers) {
+      controller.pause();
+      controller.reset();
+      controller.dispose();
+    }
+    _controllers.clear();
+  }
+
+  Future<void> _handleBackNavigation() async {
+    await _cleanupControllers();
+    if (!mounted) return;
+    
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const HomeScreen(isNewUser: false),
       ),
     );
-    
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () async {
+        await _handleBackNavigation();
+        return false;
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          leading: IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.1),
+                ),
+              ),
+              child: const Icon(
+                Icons.arrow_back,
+                color: Colors.white,
+              ),
+            ),
+            onPressed: _handleBackNavigation,
+          ),
+          title: ShaderMask(
+            shaderCallback: (bounds) => const LinearGradient(
+              colors: [Color(0xFFC6F432), Color(0xFF90E0EF)],
+            ).createShader(bounds),
+            child: Text(
+              'Video Challenges',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          backgroundColor: Colors.black,
+          elevation: 0,
+        ),
+        body: BlocBuilder<ScriptChatBloc, ScriptChatState>(
+          builder: (context, state) {
+            if (state is ScriptChatLoading) {
+              return Center(
+                child: LoadingAnimationWidget.staggeredDotsWave(
+                  color: const Color(0xFFC6F432),
+                  size: 40,
+                ),
+              );
+            }
+            
+            if (state is VideosLoaded) {
+              return ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: state.videos.length,
+                itemBuilder: (context, index) {
+                  final video = state.videos[index];
+                  final videoId = _extractVideoId(video.videoLink);
+                  
+                  if (videoId != null) {
+                    final controller = YoutubePlayerController(
+                      initialVideoId: videoId,
+                      flags: const YoutubePlayerFlags(
+                        autoPlay: false,
+                        mute: false,
+                        hideControls: false,
+                        enableCaption: true,
+                        forceHD: true,
+                        useHybridComposition: true,
+                      ),
+                    );
+                    
+                    _controllers.add(controller);
+                    
+                    return _buildVideoCard(video, controller);
+                  }
+                  return const SizedBox.shrink();
+                },
+              );
+            }
+            
+            if (state is ScriptChatError) {
+              return Center(
+                child: Text(
+                  'Error: ${state.message}',
+                  style: GoogleFonts.poppins(
+                    color: Colors.red[400],
+                    fontSize: 16,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              );
+            }
+            
+            return Center(
+              child: Text(
+                'No videos available',
+                style: GoogleFonts.poppins(
+                  color: Colors.white70,
+                  fontSize: 16,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVideoCard(Video video, YoutubePlayerController controller) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       decoration: BoxDecoration(
@@ -55,22 +183,20 @@ class _VideoDisplayScreenState extends State<VideoDisplayScreen> {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             child: AspectRatio(
               aspectRatio: 16 / 9,
-              child: videoId != null
-                  ? YoutubePlayer(
-                      controller: controller,
-                      showVideoProgressIndicator: true,
-                      progressIndicatorColor: const Color(0xFFC6F432),
-                      progressColors: const ProgressBarColors(
-                        playedColor: Color(0xFFC6F432),
-                        handleColor: Color(0xFF90E0EF),
-                      ),
-                      onReady: () {
-                        controller.addListener(() {
-                          if (mounted) setState(() {});
-                        });
-                      },
-                    )
-                  : const Center(child: Text('Invalid video URL')),
+              child: YoutubePlayer(
+                controller: controller,
+                showVideoProgressIndicator: true,
+                progressIndicatorColor: const Color(0xFFC6F432),
+                progressColors: const ProgressBarColors(
+                  playedColor: Color(0xFFC6F432),
+                  handleColor: Color(0xFF90E0EF),
+                ),
+                onReady: () {
+                  controller.addListener(() {
+                    if (mounted) setState(() {});
+                  });
+                },
+              ),
             ),
           ),
           Padding(
@@ -145,93 +271,5 @@ class _VideoDisplayScreenState extends State<VideoDisplayScreen> {
         ],
       ),
     );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.1),
-              ),
-            ),
-            child: const Icon(
-              Icons.arrow_back,
-              color: Colors.white,
-            ),
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: ShaderMask(
-          shaderCallback: (bounds) => const LinearGradient(
-            colors: [Color(0xFFC6F432), Color(0xFF90E0EF)],
-          ).createShader(bounds),
-          child: Text(
-            'Video Challenges',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-        ),
-        backgroundColor: Colors.black,
-        elevation: 0,
-      ),
-      body: BlocBuilder<ScriptChatBloc, ScriptChatState>(
-        builder: (context, state) {
-          if (state is ScriptChatLoading) {
-            return Center(
-              child: LoadingAnimationWidget.staggeredDotsWave(
-                color: const Color(0xFFC6F432),
-                size: 40,
-              ),
-            );
-          }
-          
-          if (state is VideosLoaded) {
-            return ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: state.videos.length,
-              itemBuilder: (context, index) => _buildVideoCard(state.videos[index]),
-            );
-          }
-          
-          if (state is ScriptChatError) {
-            return Center(
-              child: Text(
-                'Error: ${state.message}',
-                style: GoogleFonts.poppins(
-                  color: Colors.red[400],
-                  fontSize: 16,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            );
-          }
-          
-          return Center(
-            child: Text(
-              'No videos available',
-              style: GoogleFonts.poppins(
-                color: Colors.white70,
-                fontSize: 16,
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 } 
