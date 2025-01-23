@@ -27,6 +27,17 @@ class _VideoDisplayScreenState extends State<VideoDisplayScreen> {
 
   Widget _buildVideoCard(Video video) {
     final videoId = _extractVideoId(video.videoLink);
+    final YoutubePlayerController controller = YoutubePlayerController(
+      initialVideoId: videoId ?? '',
+      flags: const YoutubePlayerFlags(
+        autoPlay: false,
+        mute: false,
+        hideControls: false,
+        enableCaption: true,
+        forceHD: true,
+        useHybridComposition: true,
+      ),
+    );
     
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -46,15 +57,18 @@ class _VideoDisplayScreenState extends State<VideoDisplayScreen> {
               aspectRatio: 16 / 9,
               child: videoId != null
                   ? YoutubePlayer(
-                      controller: YoutubePlayerController(
-                        initialVideoId: videoId,
-                        flags: const YoutubePlayerFlags(
-                          autoPlay: false,
-                          mute: false,
-                          hideControls: false,
-                          enableCaption: true,
-                        ),
+                      controller: controller,
+                      showVideoProgressIndicator: true,
+                      progressIndicatorColor: const Color(0xFFC6F432),
+                      progressColors: const ProgressBarColors(
+                        playedColor: Color(0xFFC6F432),
+                        handleColor: Color(0xFF90E0EF),
                       ),
+                      onReady: () {
+                        controller.addListener(() {
+                          if (mounted) setState(() {});
+                        });
+                      },
                     )
                   : const Center(child: Text('Invalid video URL')),
             ),
@@ -214,5 +228,10 @@ class _VideoDisplayScreenState extends State<VideoDisplayScreen> {
         },
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 } 

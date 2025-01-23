@@ -114,173 +114,179 @@ class _ScriptChatScreenState extends State<ScriptChatScreen> with WidgetsBinding
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Video Section
-            Container(
-              height: MediaQuery.of(context).size.height * 0.3,
-              padding: const EdgeInsets.only(top: 8),
-              child: YoutubePlayer(
-                controller: _videoController,
-                showVideoProgressIndicator: true,
-                progressIndicatorColor: const Color(0xFFC6F432),
+    return WillPopScope(
+      onWillPop: () async {
+        // Return false to prevent back navigation
+        return false;
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Video Section
+              Container(
+                height: MediaQuery.of(context).size.height * 0.3,
+                padding: const EdgeInsets.only(top: 8),
+                child: YoutubePlayer(
+                  controller: _videoController,
+                  showVideoProgressIndicator: true,
+                  progressIndicatorColor: const Color(0xFFC6F432),
+                ),
               ),
-            ),
-            // Chat Section
-            Expanded(
-              child: BlocConsumer<ScriptChatBloc, ScriptChatState>(
-                listener: (context, state) {
-                  if (state is ChatStarted) {
-                    _sessionId = state.sessionId;
-                    _messages.add({
-                      'isUser': false,
-                      'message': state.message,
-                    });
-                    AudioUtils.playAudio(state.audio);
-                    _scrollToBottom();
-                  } else if (state is MessageSent) {
-                    _messages.add({
-                      'isUser': false,
-                      'message': state.message,
-                    });
-                    AudioUtils.playAudio(state.audio);
-                    _scrollToBottom();
-                  } else if (state is ChatEnded) {
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                        builder: (context) => const HomeScreen(isNewUser: false),
-                      ),
-                      (route) => false,
-                    );
-                  }
-                },
-                builder: (context, state) {
-                  return ListView.builder(
-                    controller: _scrollController,
-                    itemCount: _messages.length,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    itemBuilder: (context, index) {
-                      final message = _messages[index];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Container(
-                          alignment: message['isUser'] 
-                              ? Alignment.centerRight 
-                              : Alignment.centerLeft,
+              // Chat Section
+              Expanded(
+                child: BlocConsumer<ScriptChatBloc, ScriptChatState>(
+                  listener: (context, state) {
+                    if (state is ChatStarted) {
+                      _sessionId = state.sessionId;
+                      _messages.add({
+                        'isUser': false,
+                        'message': state.message,
+                      });
+                      AudioUtils.playAudio(state.audio);
+                      _scrollToBottom();
+                    } else if (state is MessageSent) {
+                      _messages.add({
+                        'isUser': false,
+                        'message': state.message,
+                      });
+                      AudioUtils.playAudio(state.audio);
+                      _scrollToBottom();
+                    } else if (state is ChatEnded) {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                          builder: (context) => const HomeScreen(isNewUser: false),
+                        ),
+                        (route) => false,
+                      );
+                    }
+                  },
+                  builder: (context, state) {
+                    return ListView.builder(
+                      controller: _scrollController,
+                      itemCount: _messages.length,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      itemBuilder: (context, index) {
+                        final message = _messages[index];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: message['isUser']
-                                    ? [const Color(0xFF7B61FF).withOpacity(0.1), const Color(0xFFFEC4DD).withOpacity(0.1)]
-                                    : [const Color(0xFFC6F432).withOpacity(0.1), const Color(0xFF90E0EF).withOpacity(0.1)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: message['isUser']
-                                    ? const Color(0xFF7B61FF).withOpacity(0.2)
-                                    : const Color(0xFFC6F432).withOpacity(0.2),
-                                width: 1,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: (message['isUser'] ? const Color(0xFF7B61FF) : const Color(0xFFC6F432)).withOpacity(0.1),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
+                            alignment: message['isUser'] 
+                                ? Alignment.centerRight 
+                                : Alignment.centerLeft,
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: message['isUser']
+                                      ? [const Color(0xFF7B61FF).withOpacity(0.1), const Color(0xFFFEC4DD).withOpacity(0.1)]
+                                      : [const Color(0xFFC6F432).withOpacity(0.1), const Color(0xFF90E0EF).withOpacity(0.1)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                 ),
-                              ],
-                            ),
-                            child: Text(
-                              message['message'],
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                                fontSize: 14,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: message['isUser']
+                                      ? const Color(0xFF7B61FF).withOpacity(0.2)
+                                      : const Color(0xFFC6F432).withOpacity(0.2),
+                                  width: 1,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (message['isUser'] ? const Color(0xFF7B61FF) : const Color(0xFFC6F432)).withOpacity(0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                message['message'],
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-            // Bottom Controls Container
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: Colors.black,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // End Button
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFC6F432), Color(0xFF90E0EF)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (_sessionId != null) {
-                          context.read<ScriptChatBloc>().add(EndChat(_sessionId!));
-                        }
+                        );
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      ),
-                      child: Text(
-                        'End',
-                        style: GoogleFonts.poppins(
-                          color: Colors.black,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Mic Button with updated colors
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: _isListening 
-                            ? [Colors.red, Colors.redAccent]
-                            : [const Color(0xFFC6F432), const Color(0xFF90E0EF)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: ElevatedButton(
-                      onPressed: _isListening ? _stopListening : _startListening,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        shape: const CircleBorder(),
-                        padding: const EdgeInsets.all(16),
-                      ),
-                      child: Icon(
-                        _isListening ? Icons.mic_off : Icons.mic,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
-                ],
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+              // Bottom Controls Container
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                color: Colors.black,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // End Button
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFC6F432), Color(0xFF90E0EF)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (_sessionId != null) {
+                            context.read<ScriptChatBloc>().add(EndChat(_sessionId!));
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        ),
+                        child: Text(
+                          'End',
+                          style: GoogleFonts.poppins(
+                            color: Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Mic Button with updated colors
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: _isListening 
+                              ? [Colors.red, Colors.redAccent]
+                              : [const Color(0xFFC6F432), const Color(0xFF90E0EF)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: ElevatedButton(
+                        onPressed: _isListening ? _stopListening : _startListening,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          shape: const CircleBorder(),
+                          padding: const EdgeInsets.all(16),
+                        ),
+                        child: Icon(
+                          _isListening ? Icons.mic_off : Icons.mic,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
