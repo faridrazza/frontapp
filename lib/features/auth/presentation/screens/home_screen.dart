@@ -42,17 +42,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final Logger _logger = Logger();
   String _userName = '';
   final AdService _adService = AdService();
-  late Stream<List<ConnectivityResult>> _connectivityStream; // Change to List
+  late Stream<List<ConnectivityResult>> _connectivityStream;
   bool _isConnected = true;
+  bool _hasLoadedProfile = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this); // Add observer
-    _connectivityStream = Connectivity().onConnectivityChanged; // Stream<List<ConnectivityResult>>
+    WidgetsBinding.instance.addObserver(this);
+    _connectivityStream = Connectivity().onConnectivityChanged;
     _connectivityStream.listen(_updateConnectionStatus);
-    _checkInitialConnection(); // Check initial connection
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    _checkInitialConnection();
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       systemNavigationBarColor: Colors.black,
       systemNavigationBarIconBrightness: Brightness.light,
     ));
@@ -65,14 +66,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   void _updateConnectionStatus(List<ConnectivityResult> results) {
     setState(() {
-      _isConnected = results.isNotEmpty && (results.contains(ConnectivityResult.mobile) || results.contains(ConnectivityResult.wifi));
+      _isConnected = results.isNotEmpty && 
+        (results.contains(ConnectivityResult.mobile) || 
+         results.contains(ConnectivityResult.wifi));
     });
+    
     if (!_isConnected) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No internet connection.')),
+        const SnackBar(content: Text('No internet connection.')),
       );
-    } else {
-      _fetchUserProfile(); // Fetch profile when connection is restored
+    } else if (!_hasLoadedProfile || _userName.isEmpty) {
+      _fetchUserProfile();
       _adService.loadLargeBannerAd();
       _adService.loadInterstitialAd();
     }
@@ -80,21 +84,27 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _fetchUserProfile(); // Fetch profile when app is resumed
+    if (state == AppLifecycleState.resumed && (!_hasLoadedProfile || _userName.isEmpty)) {
+      _fetchUserProfile();
     }
   }
 
   Future<void> _fetchUserProfile() async {
+    if (!_isConnected || _hasLoadedProfile) return;
+
     try {
       final profile = await _apiService.getProfile();
       _logger.d('Received profile data in HomeScreen: $profile');
       
       if (mounted) {
-        setState(() {
-          _userName = profile['user']?['name']?.toString().trim() ?? 'User';
-          _logger.i('Updated username to: $_userName');
-        });
+        final newUserName = profile['user']?['name']?.toString().trim() ?? 'User';
+        if (newUserName != _userName) {
+          setState(() {
+            _userName = newUserName;
+            _hasLoadedProfile = true;
+            _logger.i('Updated username to: $_userName');
+          });
+        }
       }
     } catch (e) {
       _logger.e('Error fetching user profile: $e');
@@ -107,12 +117,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           );
         }
       }
+      _hasLoadedProfile = false;
     }
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this); // Remove observer
+    WidgetsBinding.instance.removeObserver(this);
     _adService.dispose();
     super.dispose();
   }
