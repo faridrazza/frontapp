@@ -99,6 +99,7 @@ linux/
 .env
 
 lib/core/config/app_config.dart
+lib/core/config/app_config.template.dart
 
 
 

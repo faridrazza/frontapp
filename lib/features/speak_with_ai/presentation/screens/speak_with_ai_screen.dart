@@ -109,16 +109,19 @@ class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTicker
                 child: child,
               );
             },
-            child: Image.asset('assets/images/AI.png', width: 60, height: 60),
+            child: Image.asset('assets/images/glow7.png', width: 60, height: 60),
           ),
           SizedBox(width: 80),
+
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Hiba AI', style: TextStyle(color: Color(0xFFC6F432), fontSize: 18, fontWeight: FontWeight.bold)),
+              Text('Claire AI', style: TextStyle(color: Color(0xFFC6F432), fontSize: 18, fontWeight: FontWeight.bold)),
               Row(
                 children: [
                   Container(
+
+
                     width: 8,
                     height: 8,
                     decoration: BoxDecoration(
@@ -161,9 +164,10 @@ class _SpeakWithAIScreenState extends State<SpeakWithAIScreen> with SingleTicker
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
-                      "Hi, I'm Hiba, your English speaking partner",
+                      "Hi, I'm Claire, your English speaking partner",
                       style: TextStyle(color: Colors.white, fontSize: 14),
                     ),
+
                   ),
                 ),
               ],

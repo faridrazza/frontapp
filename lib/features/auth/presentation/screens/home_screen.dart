@@ -190,12 +190,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         mainAxisSpacing: 12,
                         childAspectRatio: 1.6,
                         children: [
-                          _buildFeatureButton('Speak with AI', Color(0xFFC6F432), Icons.record_voice_over, true),
-                          _buildFeatureButton('Interview AI', Color(0xFF7B61FF), Icons.business, false),
+                          _buildFeatureButton('Speak with Claire', Color(0xFFC6F432), Icons.record_voice_over, true),
+                          _buildFeatureButton('Interview AI', Color(0xFFFFDE59), Icons.business, false),
                           _buildFeatureButton('Learn with AI', Color(0xFFC09FF8), Icons.school, false),
-                          _buildFeatureButton('Script Chat', Color(0xFF4CAF50), Icons.movie, false),
-                          _buildFeatureButton('Role play ideas', Color(0xFFFFB341), Icons.lightbulb, false),
-                          _buildFeatureButton('Rapid Sentence', Color(0xFFFEC4DD), Icons.qr_code, false),
+                          _buildFeatureButton('Video Convo', Color(0xFF67D9BA), Icons.movie, false),
+                          _buildFeatureButton('Role play ideas', Color(0xFF4CAF50), Icons.lightbulb, false),
+                          _buildFeatureButton('Rapid Sentence', Color(0xFFFFB341), Icons.qr_code, false),
                         ],
                       ),
                     ),
@@ -384,7 +384,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _handleFeatureTap(String label) async {
-    if (label == 'Script Chat') {
+    if (label == 'Video Convo') {
       await _adService.showInterstitialAd();
       final scriptChatBloc = ScriptChatBloc(_apiService);
       Navigator.push(
@@ -400,7 +400,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
         ),
       );
-    } else if (label == 'Speak with AI') {
+    } else if (label == 'Speak with Claire') {
       await _adService.showInterstitialAd();
       Navigator.push(
         context,

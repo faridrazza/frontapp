@@ -8,8 +8,8 @@
 
 
     class AppConfig {
-     static const String devBaseUrl = 'http://192.168.0.111:3000';
-     static const String prodBaseUrl = 'YOUR_PROD_URL_HERE';
+     static const String devBaseUrl = 'https://backendt-english.onrender.com';
+     static const String prodBaseUrl = 'https://backendt-english.onrender.com';
      static const bool isProduction = false; // Set to true for production builds
 
      static String get baseUrl => isProduction ? prodBaseUrl : devBaseUrl;
