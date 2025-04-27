@@ -41,7 +41,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final ApiService _apiService = ApiService();
   final Logger _logger = Logger();
   String _userName = '';
-  final AdService _adService = AdService();
   late Stream<List<ConnectivityResult>> _connectivityStream;
   bool _isConnected = true;
   bool _hasLoadedProfile = false;
@@ -77,8 +76,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       );
     } else if (!_hasLoadedProfile || _userName.isEmpty) {
       _fetchUserProfile();
-      _adService.loadLargeBannerAd();
-      _adService.loadInterstitialAd();
     }
   }
 
@@ -124,7 +121,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _adService.dispose();
     super.dispose();
   }
 
@@ -385,7 +381,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   void _handleFeatureTap(String label) async {
     if (label == 'Video Convo') {
-      await _adService.showInterstitialAd();
       final scriptChatBloc = ScriptChatBloc(_apiService);
       Navigator.push(
         context,
@@ -401,7 +396,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
       );
     } else if (label == 'Speak with Claire') {
-      await _adService.showInterstitialAd();
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -417,7 +411,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
       );
     } else if (label == 'Interview AI') {
-      await _adService.showInterstitialAd();
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -430,7 +423,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
       );
     } else if (label == 'Learn with AI') {
-      await _adService.showInterstitialAd();
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -441,7 +433,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
       );
     } else if (label == 'Rapid Sentence') {
-      await _adService.showInterstitialAd();
       Navigator.push(
         context,
         MaterialPageRoute(
